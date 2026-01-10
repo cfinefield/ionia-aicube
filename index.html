@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>AI Cube - Multi-Lens Debugger</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  <div id="app">
+    <canvas id="cube-canvas"></canvas>
+
+    <!-- Lens Info Panel -->
+    <aside id="lens-panel" class="lens-panel">
+      <div class="lens-header">
+        <span id="lens-icon" class="lens-icon">👤</span>
+        <div class="lens-title-wrap">
+          <h2 id="lens-title" class="lens-title">Human View</h2>
+          <span id="lens-tier" class="lens-tier">Tier 1</span>
+        </div>
+      </div>
+      <p id="lens-format" class="lens-format">Full Visual HTML/CSS/JS</p>
+      <p id="lens-description" class="lens-description">The full visual experience designed for human visitors.</p>
+
+      <div class="agent-thoughts">
+        <h3>🤖 Agent Thoughts</h3>
+        <ul id="agent-thoughts-list">
+          <li>Analyzing page structure...</li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- Bottom UI -->
+    <div id="ui-overlay">
+      <div class="face-indicator">
+        <span class="face-dot active" data-face="0" title="Human View"></span>
+        <span class="face-dot" data-face="1" title="Browser Agent"></span>
+        <span class="face-dot" data-face="2" title="Crawler"></span>
+        <span class="face-dot" data-face="3" title="Transaction"></span>
+        <span class="face-dot" data-face="4" title="Persona"></span>
+        <span class="face-dot" data-face="5" title="Action"></span>
+      </div>
+      <div class="instructions">
+        <span class="key">←</span><span class="key">→</span><span class="key">↑</span><span class="key">↓</span>
+        Navigate
+        <span class="separator">•</span>
+        <span class="gesture">Scroll</span> Zoom
+      </div>
+    </div>
+
+    <div id="loading-overlay" class="hidden">
+      <div class="loading-spinner"></div>
+      <p>Loading AI Rail Lenses...</p>
+    </div>
+  </div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+
+</html>
