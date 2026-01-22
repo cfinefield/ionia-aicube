@@ -46,25 +46,25 @@ export class TransactionLens {
         return `
             <div class="lens lens--transaction">
                 <div class="connectivity-status-bar">
-                    <div class="status-item status-success" data-tooltip="Universal Commerce Protocol detected. Ready for Google Gemini & Search.">
+                    <div class="status-item status-inactive" data-tooltip="Inactive (Missing Manifest)">
                         <div class="status-icon-img">
                             <img src="/logos/ucp.png" alt="UCP">
                         </div>
                         <span class="status-dot"></span>
                     </div>
-                    <div class="status-item status-success" data-tooltip="Agent Commerce Protocol detected. Ready for ChatGPT & Instant Checkout.">
+                    <div class="status-item status-inactive" data-tooltip="Inactive (No Agent Tags)">
                         <div class="status-icon-img">
                             <img src="/logos/acp.png" alt="ACP">
                         </div>
                         <span class="status-dot"></span>
                     </div>
-                    <div class="status-item status-partial" data-tooltip="Model Context Protocol detected. Ready for Claude & RAG engines.">
+                    <div class="status-item status-inactive" data-tooltip="Inactive (No Context Files)">
                         <div class="status-icon-img">
                             <img src="/logos/mcp.png" alt="MCP">
                         </div>
                         <span class="status-dot"></span>
                     </div>
-                    <div class="status-item status-missing" data-tooltip="Buy with Prime widget detected. Ready for Amazon Alexa & Shopping.">
+                    <div class="status-item status-inactive" data-tooltip="Inactive (No Widget)">
                         <div class="status-icon-img">
                             <img src="/logos/prime.png" alt="Prime">
                         </div>

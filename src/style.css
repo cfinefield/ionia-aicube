@@ -645,6 +645,10 @@ body {
   background: rgba(15, 23, 42, 0.6);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   margin-bottom: 0;
+  position: relative;
+  /* Create stacking context */
+  z-index: 50;
+  /* Ensure on top of code-editor */
 }
 
 .status-item {
@@ -658,11 +662,15 @@ body {
   background: rgba(255, 255, 255, 0.05);
   cursor: help;
   transition: all 0.2s;
+  z-index: 1;
+  /* Reset stack */
 }
 
 .status-item:hover {
   background: rgba(255, 255, 255, 0.15);
   transform: translateY(-2px);
+  z-index: 100;
+  /* Float up */
 }
 
 .status-icon-img {
@@ -671,6 +679,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  object-fit: contain;
+  transition: all 0.2s;
 }
 
 .status-icon-img img {
@@ -686,7 +696,7 @@ body {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  border: 1px solid rgba(15, 23, 42, 0.8);
+  border: 2px solid #1e1e1e;
   z-index: 10;
 }
 
@@ -721,6 +731,17 @@ body {
   display: none;
 }
 
+/* Inactive State (Grey dot) */
+.status-inactive .status-icon-img {
+  filter: grayscale(100%) brightness(0.7);
+  opacity: 0.3;
+}
+
+.status-inactive .status-dot {
+  background: #94a3b8;
+  box-shadow: 0 0 2px #94a3b8;
+}
+
 /* Custom Tooltip */
 .status-item[data-tooltip]:hover::after {
   content: attr(data-tooltip);
@@ -736,7 +757,7 @@ body {
   font-size: 11px;
   border-radius: 6px;
   white-space: nowrap;
-  z-index: 100;
+  z-index: 9999;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
   pointer-events: none;
   width: max-content;
