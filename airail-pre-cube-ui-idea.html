@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Presentation Debugger - CDJ-3000X</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-pane: rgba(10, 10, 10, 0.6);
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --border-primary: rgba(255, 255, 255, 0.1);
+            --lens-persona-color: rgba(56, 189, 248, 0.8); /* sky-400 */
+            --lens-crawler-color: rgba(250, 204, 21, 0.8);  /* yellow-400 */
+            --lens-action-color: rgba(74, 222, 128, 0.8);   /* green-400 */
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #f1f5f9;
+            --bg-pane: rgba(255, 255, 255, 0.6);
+            --text-primary: #1e293b;
+            --text-secondary: #475569;
+            --border-primary: rgba(0, 0, 0, 0.1);
+            --lens-persona-color: rgba(2, 132, 199, 0.8);   /* sky-600 */
+            --lens-crawler-color: rgba(217, 119, 6, 0.8);   /* amber-600 */
+            --lens-action-color: rgba(22, 163, 74, 0.8);    /* green-600 */
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            background-image: url('https://images.unsplash.com/photo-1599666433232-2b225eb52d82?q=80&w=3456&auto-format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .glass-pane {
+            background-color: var(--bg-pane);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid var(--border-primary);
+            border-radius: 1.5rem;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        /* Lens Highlighting */
+        .lens-highlight {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        .lens-highlight::after {
+            content: attr(data-lens-label);
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            padding: 2px 8px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: white;
+            border-radius: 9999px;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            pointer-events: none;
+        }
+
+        /* Persona Lens Active */
+        body[data-lenses*="persona"] .lens-highlight[data-lens*="persona"] {
+            box-shadow: 0 0 0 2px var(--lens-persona-color), 0 0 15px var(--lens-persona-color);
+        }
+        body[data-lenses*="persona"] .lens-highlight[data-lens*="persona"]::after {
+            background-color: var(--lens-persona-color);
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* Crawler Lens Active */
+        body[data-lenses*="crawler"] .lens-highlight[data-lens*="crawler"] {
+            outline: 2px dashed var(--lens-crawler-color);
+            outline-offset: 2px;
+        }
+
+        /* Action Lens Active */
+        body[data-lenses*="action"] .lens-highlight[data-lens*="action"] {
+            border: 2px solid var(--lens-action-color);
+        }
+        
+        /* Toggle Switch */
+        .switch { position: relative; display: inline-block; width: 40px; height: 24px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #4b5563; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--color); }
+        input:checked + .slider:before { transform: translateX(16px); }
+        
+        /* Custom Select Dropdown */
+        .custom-select {
+            position: relative;
+        }
+        .custom-select select {
+            appearance: none;
+            -webkit-appearance: none;
+            background-color: rgba(255,255,255,0.05);
+            border: 1px solid var(--border-primary);
+            color: var(--text-primary);
+            padding: 0.5rem 2.5rem 0.5rem 1rem;
+            border-radius: 0.5rem;
+            width: 100%;
+        }
+        .custom-select .arrow {
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            color: var(--text-secondary);
+        }
+
+        /* Neo-Glassmorphic Button */
+        .neo-glass-button {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2), inset 0px 1px 1px 0px rgba(255, 255, 255, 0.1);
+            transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            transform: perspective(500px) rotateX(0) scale(1);
+            color: white;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem; /* 12px */
+        }
+        .neo-glass-button:hover {
+            box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.25), inset 0px 1px 1px 0px rgba(255, 255, 255, 0.15);
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.08));
+        }
+
+    </style>
+</head>
+<body class="min-h-screen w-full p-4 sm:p-6 lg:p-8" data-lenses="">
+
+    <div class="w-full max-w-[90rem] mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6 h-[90vh]">
+
+        <!-- Main Panel: Presentation View -->
+        <div class="glass-pane lg:col-span-2 p-6 md:p-8 flex flex-col h-full">
+            <div class="flex-shrink-0 mb-4 flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold text-primary">Presentation / Agent View</h1>
+                    <p class="text-secondary">AI-curated content, dynamically highlighted by lenses.</p>
+                </div>
+                 <!-- Theme Toggle Button -->
+                <button id="theme-toggle" class="p-2 rounded-full bg-black/10 backdrop-blur-sm">
+                    <svg id="theme-icon-light" class="h-6 w-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                    <svg id="theme-icon-dark" class="h-6 w-6 text-slate-400 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+                </button>
+            </div>
+            <div id="presentation-content" class="flex-grow overflow-y-auto pr-3 space-y-6">
+                <!-- Content will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <!-- Right Sidebar: Tool Interface -->
+        <div class="glass-pane lg:col-span-1 p-6 flex flex-col h-full">
+            <div class="flex-shrink-0">
+                <h2 class="text-xl font-bold text-primary">Optimization Tool</h2>
+                <p class="text-secondary text-sm">Use lenses to debug and apply AI suggestions.</p>
+            </div>
+            <div class="flex-grow overflow-y-auto pr-2 space-y-6 mt-4">
+                <!-- Persona Selector -->
+                <div>
+                    <h3 class="font-semibold text-primary mb-2">Active Persona</h3>
+                    <div class="custom-select">
+                        <select id="persona-selector">
+                            <option value="dj">Semi-Pro DJ</option>
+                            <option value="producer">Hobbyist Producer</option>
+                        </select>
+                        <div class="arrow">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></svg>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Lenses Section -->
+                <div class="border-t border-border-primary pt-4">
+                    <h3 class="font-semibold text-primary mb-3">Diagnostic Lenses</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="font-medium">Persona Relevance</span>
+                            <label class="switch"><input type="checkbox" class="lens-toggle" data-lens="persona"><span class="slider" style="--color: var(--lens-persona-color);"></span></label>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="font-medium">Crawler View (Structure)</span>
+                            <label class="switch"><input type="checkbox" class="lens-toggle" data-lens="crawler"><span class="slider" style="--color: var(--lens-crawler-color);"></span></label>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="font-medium">Actionable Elements</span>
+                            <label class="switch"><input type="checkbox" class="lens-toggle" data-lens="action"><span class="slider" style="--color: var(--lens-action-color);"></span></label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Suggestions Section -->
+                <div id="suggestions-content" class="border-t border-border-primary pt-4">
+                    <!-- Suggestions will be dynamically inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const themeToggle = document.getElementById('theme-toggle');
+        const lightIcon = document.getElementById('theme-icon-light');
+        const darkIcon = document.getElementById('theme-icon-dark');
+        const lensToggles = document.querySelectorAll('.lens-toggle');
+        const body = document.body;
+        const personaSelector = document.getElementById('persona-selector');
+        const presentationContainer = document.getElementById('presentation-content');
+        const suggestionsContainer = document.getElementById('suggestions-content');
+
+        const personaData = {
+            dj: {
+                content: `
+                    <div class="lens-highlight rounded-xl p-1" data-lens="crawler persona" data-lens-label="Persona-Relevant">
+                        <img src="https://media.sweetwater.com/api/i/f-webp__q-82__ha-214488a6ff022295__hmac-402a4664870f7d23f458e0a320573e04e76a165b/images/items/750/CDJ3000x-large.jpg.auto.webp" alt="Alpha Theta CDJ-3000X" class="rounded-lg object-contain h-64 w-full bg-black/20">
+                    </div>
+                    <div class="lens-highlight p-1" data-lens="persona" data-lens-label="Persona-Relevant">
+                        <p class="text-secondary">This unit's core strength is its onboard <span class="font-semibold text-sky-400">MPU (micro-processing unit)</span>, which drives faster load times and enables advanced features without latency. For a semi-pro DJ, this translates to reliability during performance and a smoother creative workflow.</p>
+                    </div>
+                    <div class="lens-highlight p-1" data-lens="crawler persona" data-lens-label="Persona-Relevant">
+                         <h2 class="text-xl font-semibold text-primary border-b border-border-primary pb-2 mb-3">Key Features for Performance</h2>
+                        <ul class="space-y-2 text-secondary list-disc list-inside">
+                            <li><span class="font-semibold text-primary">Advanced MPU:</span> Powers features like Key Sync & Shift.</li>
+                            <li><span class="font-semibold text-primary">Redesigned Jog Wheel:</span> Lower touch latency.</li>
+                            <li><span class="font-semibold text-primary">Pro DJ Link:</span> Sync up to 6 players for complex setups.</li>
+                        </ul>
+                    </div>
+                    <div class="lens-highlight p-2 rounded-3xl" data-lens="action persona" data-lens-label="Persona-Relevant">
+                         <div class="glass-pane !bg-slate-800/50 p-6 rounded-2xl">
+                            <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                                <div>
+                                    <p class="text-3xl font-bold text-white">$2,499.00</p>
+                                    <p class="text-sky-400 font-semibold mt-1">Or $67/month with 36 month financing.</p>
+                                </div>
+                                <button id="purchase-btn" class="neo-glass-button w-full sm:w-auto">View Purchase Options</button>
+                            </div>
+                        </div>
+                    </div>
+                `,
+                suggestions: `
+                    <h3 class="font-semibold text-primary mb-3">AI Suggestions for 'Semi-Pro DJ'</h3>
+                    <div class="space-y-3">
+                        <div class="bg-green-500/10 p-3 rounded-lg border border-green-500/30">
+                            <p class="font-semibold text-green-400 text-sm">Highlight 'Pro DJ Link'</p>
+                            <p class="text-secondary text-xs mt-1">This feature is critical for professional setups. Ensure it's tagged semantically for agents to identify its importance.</p>
+                            <button class="suggestion-btn mt-2 text-xs bg-green-500/80 text-white font-bold py-1 px-3 rounded-full">Apply Enrichment</button>
+                        </div>
+                         <div class="bg-yellow-500/10 p-3 rounded-lg border border-yellow-500/30">
+                            <p class="font-semibold text-yellow-400 text-sm">Clarify Financing Action</p>
+                            <p class="text-secondary text-xs mt-1">The financing text is unstructured. Structure it to enable direct agent action for this budget-conscious persona.</p>
+                            <button class="suggestion-btn mt-2 text-xs bg-yellow-500/80 text-white font-bold py-1 px-3 rounded-full">Structure Data</button>
+                        </div>
+                    </div>
+                `
+            },
+            producer: {
+                content: `
+                    <div class="lens-highlight rounded-xl p-1" data-lens="crawler">
+                        <img src="https://media.sweetwater.com/api/i/f-webp__q-82__ha-214488a6ff022295__hmac-402a4664870f7d23f458e0a320573e04e76a165b/images/items/750/CDJ3000x-large.jpg.auto.webp" alt="Alpha Theta CDJ-3000X" class="rounded-lg object-contain h-64 w-full bg-black/20">
+                    </div>
+                     <div class="lens-highlight p-1" data-lens="persona" data-lens-label="Persona-Relevant">
+                        <p class="text-secondary">While known for DJing, this unit's <span class="font-semibold text-sky-400">high-resolution audio DAC</span> and responsive jog wheel make it an excellent tool for studio producers. Use it as a high-fidelity deck for sampling or as a tactile controller for your DAW.</p>
+                    </div>
+                    <div class="lens-highlight p-1" data-lens="crawler persona" data-lens-label="Persona-Relevant">
+                        <h2 class="text-xl font-semibold text-primary border-b border-border-primary pb-2 mb-3">Key Features for Production</h2>
+                        <ul class="space-y-2 text-secondary list-disc list-inside">
+                            <li><span class="font-semibold text-primary">32-bit/96kHz DAC:</span> Delivers superior, club-ready audio quality for sampling.</li>
+                            <li><span class="font-semibold text-primary">MIDI Control:</span> Can be used to control production software.</li>
+                            <li><span class="font-semibold text-primary">Pitch 'n Time DJ:</span> High-quality key shifting and syncing for samples.</li>
+                        </ul>
+                    </div>
+                    <div class="lens-highlight p-2 rounded-3xl" data-lens="action">
+                         <div class="glass-pane !bg-slate-800/50 p-6 rounded-2xl">
+                            <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                                <div>
+                                    <p class="text-3xl font-bold text-white">$2,499.00</p>
+                                </div>
+                                <button id="purchase-btn" class="neo-glass-button w-full sm:w-auto">View Purchase Options</button>
+                            </div>
+                        </div>
+                    </div>
+                `,
+                suggestions: `
+                    <h3 class="font-semibold text-primary mb-3">AI Suggestions for 'Hobbyist Producer'</h3>
+                    <div class="space-y-3">
+                        <div class="bg-green-500/10 p-3 rounded-lg border border-green-500/30">
+                            <p class="font-semibold text-green-400 text-sm">Add 'Studio Use' Metadata</p>
+                            <p class="text-secondary text-xs mt-1">The product page lacks explicit keywords for studio production. Adding terms like 'DAW controller' or 'sampling deck' will attract this persona.</p>
+                            <button class="suggestion-btn mt-2 text-xs bg-green-500/80 text-white font-bold py-1 px-3 rounded-full">Apply Metadata</button>
+                        </div>
+                         <div class="bg-yellow-500/10 p-3 rounded-lg border border-yellow-500/30">
+                            <p class="font-semibold text-yellow-400 text-sm">De-emphasize Financing</p>
+                            <p class="text-secondary text-xs mt-1">Financing options are less critical for this persona. Consider moving this information to a secondary click to simplify the primary call to action.</p>
+                            <button class="suggestion-btn mt-2 text-xs bg-yellow-500/80 text-white font-bold py-1 px-3 rounded-full">Simplify CTA</button>
+                        </div>
+                    </div>
+                `
+            }
+        };
+
+        function renderPersona(persona) {
+            presentationContainer.innerHTML = personaData[persona].content;
+            suggestionsContainer.innerHTML = personaData[persona].suggestions;
+            addSuggestionButtonListeners();
+            addPurchaseButtonListeners(); // Add listeners for the purchase button
+        }
+
+        function addSuggestionButtonListeners() {
+            document.querySelectorAll('.suggestion-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const originalText = btn.textContent;
+                    btn.textContent = 'Applied!';
+                    btn.classList.add('opacity-50', 'cursor-not-allowed');
+                    setTimeout(() => {
+                       btn.textContent = originalText;
+                       btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    }, 2000);
+                });
+            });
+        }
+        
+        function addPurchaseButtonListeners() {
+            const purchaseBtn = document.getElementById('purchase-btn');
+            if (!purchaseBtn) return;
+
+            purchaseBtn.addEventListener('mousedown', () => {
+                gsap.to(purchaseBtn, { 
+                    scale: 0.95,
+                    duration: 0.2, 
+                    transformOrigin: 'center center',
+                    boxShadow: '0px 2px 10px rgba(0, 0, 0, 0.3), inset 0px 2px 2px 0px rgba(0, 0, 0, 0.2)',
+                    ease: 'power2.out'
+                });
+            });
+
+            purchaseBtn.addEventListener('mouseup', () => {
+                gsap.to(purchaseBtn, { 
+                    scale: 1, 
+                    duration: 0.4, 
+                    ease: 'elastic.out(1, 0.3)',
+                    boxShadow: '0px 8px 20px rgba(0, 0, 0, 0.25), inset 0px 1px 1px 0px rgba(255, 255, 255, 0.15)'
+                });
+            });
+
+            purchaseBtn.addEventListener('mouseleave', () => {
+                 gsap.to(purchaseBtn, { 
+                    scale: 1, 
+                    duration: 0.4, 
+                    ease: 'elastic.out(1, 0.3)',
+                    boxShadow: '0px 5px 15px rgba(0, 0, 0, 0.2), inset 0px 1px 1px 0px rgba(255, 255, 255, 0.1)'
+                });
+            });
+        }
+        
+        personaSelector.addEventListener('change', () => {
+            renderPersona(personaSelector.value);
+        });
+
+        // --- THEME ---
+        function applyTheme(theme) {
+            if (theme === 'light') {
+                document.documentElement.setAttribute('data-theme', 'light');
+                lightIcon.classList.add('hidden');
+                darkIcon.classList.remove('hidden');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                darkIcon.classList.add('hidden');
+                lightIcon.classList.remove('hidden');
+            }
+        }
+        themeToggle.addEventListener('click', () => {
+            const newTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            applyTheme(newTheme);
+        });
+        applyTheme('dark');
+
+        // --- LENSES ---
+        let activeLenses = new Set();
+        function updateLenses() {
+            body.setAttribute('data-lenses', Array.from(activeLenses).join(' '));
+        }
+        lensToggles.forEach(toggle => {
+            toggle.addEventListener('change', () => {
+                const lens = toggle.dataset.lens;
+                if (toggle.checked) {
+                    activeLenses.add(lens);
+                } else {
+                    activeLenses.delete(lens);
+                }
+                updateLenses();
+            });
+        });
+        
+        // Initial Render
+        renderPersona(personaSelector.value);
+    });
+    </script>
+</body>
+</html>
+

@@ -5,117 +5,112 @@
  */
 
 export class PersonaLens {
-    render(ctx, width, height, data) {
-        // Background with subtle persona tint
-        const bgGradient = ctx.createLinearGradient(0, 0, 0, height);
-        bgGradient.addColorStop(0, '#faf5ff');
-        bgGradient.addColorStop(1, '#f3e8ff');
-        ctx.fillStyle = bgGradient;
-        ctx.fillRect(0, 0, width, height);
+    renderHTML(data, personaMode = 'generic') {
+        // Mode handling: generic vs targeted
+        let personaKey;
+        let persona;
 
-        const persona = data.personaRelevance['Semi-Pro DJ'];
+        if (personaMode === 'generic') {
+            personaKey = 'General Shopper';
+            persona = {
+                overallScore: 0.85,
+                highlights: [
+                    'Standard Features',
+                    'Reliability',
+                    'Brand Reputation'
+                ]
+            };
+        } else {
+            // Pick the first available specific persona
+            personaKey = Object.keys(data.personaRelevance)[0];
+            persona = data.personaRelevance[personaKey];
+        }
 
-        // Persona header
-        ctx.fillStyle = '#7c3aed';
-        ctx.fillRect(0, 0, width, 55);
+        const score = Math.round(persona.overallScore * 100);
 
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 12px Inter, sans-serif';
-        ctx.fillText('🎧 PERSONA: Semi-Pro DJ', 15, 25);
+        // Render highlights based on selected persona
+        const highlightsHTML = persona.highlights.map(h => `
+            <div class="relevance-item relevance-item--high lens-highlight lens-highlight--persona" data-lens-label="High Match">
+                <div class="relevance-icon">★</div>
+                <div class="relevance-text">${h}</div>
+                <div class="relevance-bar">
+                    <div class="relevance-bar-fill relevance-bar-fill--high" style="width: 100%"></div>
+                </div>
+            </div>
+        `).join('');
 
-        // Score badge
-        ctx.fillStyle = '#a78bfa';
-        ctx.beginPath();
-        ctx.roundRect(width - 70, 10, 55, 35, 8);
-        ctx.fill();
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 18px Inter, sans-serif';
-        ctx.fillText(`${Math.round(persona.overallScore * 100)}%`, width - 58, 35);
-        ctx.font = '8px Inter, sans-serif';
-        ctx.fillText('MATCH', width - 55, 48);
+        // Medium relevance features (Generic placeholders if generic mode)
+        const mediumItems = personaMode === 'generic' ?
+            [{ text: 'Price point', score: 60 }, { text: 'Availability', score: 80 }] :
+            [{ text: 'Financing options available', score: 70 }, { text: 'Standard connectivity', score: 65 }];
 
-        let y = 75;
-        const margin = 15;
+        const mediumHTML = mediumItems.map(item => `
+            <div class="relevance-item relevance-item--medium">
+                <div class="relevance-icon">◐</div>
+                <div class="relevance-text">${item.text}</div>
+                <div class="relevance-bar">
+                    <div class="relevance-bar-fill relevance-bar-fill--medium" style="width: ${item.score}%"></div>
+                </div>
+            </div>
+        `).join('');
 
-        // High relevance section
-        ctx.fillStyle = '#059669';
-        ctx.font = 'bold 11px Inter, sans-serif';
-        ctx.fillText('HIGH RELEVANCE', margin, y);
-        y += 18;
-
-        // Highlighted features
-        persona.highlights.forEach(highlight => {
-            ctx.fillStyle = 'rgba(5, 150, 105, 0.15)';
-            ctx.beginPath();
-            ctx.roundRect(margin, y - 12, width - margin * 2, 22, 6);
-            ctx.fill();
-
-            ctx.fillStyle = '#047857';
-            ctx.font = '10px Inter, sans-serif';
-            ctx.fillText('★ ' + highlight.substring(0, 45), margin + 8, y + 2);
-            y += 28;
-        });
-
-        y += 10;
-
-        // Medium relevance
-        ctx.fillStyle = '#d97706';
-        ctx.font = 'bold 11px Inter, sans-serif';
-        ctx.fillText('MEDIUM RELEVANCE', margin, y);
-        y += 18;
-
-        const mediumItems = [
-            'Financing options available',
-            'USB-C connectivity'
-        ];
-
-        mediumItems.forEach(item => {
-            ctx.fillStyle = 'rgba(217, 119, 6, 0.1)';
-            ctx.beginPath();
-            ctx.roundRect(margin, y - 12, width - margin * 2, 22, 6);
-            ctx.fill();
-
-            ctx.fillStyle = '#b45309';
-            ctx.font = '10px Inter, sans-serif';
-            ctx.fillText('◐ ' + item, margin + 8, y + 2);
-            y += 28;
-        });
-
-        y += 10;
-
-        // Low relevance (dimmed)
-        ctx.fillStyle = '#9ca3af';
-        ctx.font = 'bold 11px Inter, sans-serif';
-        ctx.fillText('LOW RELEVANCE (dimmed)', margin, y);
-        y += 18;
-
+        // Low relevance
         const lowItems = [
-            'Next-gen CDJ with hardware upgrades',
-            'General marketing description'
+            { text: 'Generic marketing copy', score: 30 },
+            { text: 'Legal disclaimer', score: 20 }
         ];
+        const lowHTML = lowItems.map(item => `
+            <div class="relevance-item relevance-item--low">
+                <div class="relevance-icon">○</div>
+                <div class="relevance-text">${item.text}</div>
+                <div class="relevance-bar">
+                    <div class="relevance-bar-fill relevance-bar-fill--low" style="width: ${item.score}%"></div>
+                </div>
+            </div>
+        `).join('');
 
-        lowItems.forEach(item => {
-            ctx.globalAlpha = 0.4;
-            ctx.fillStyle = '#6b7280';
-            ctx.font = '10px Inter, sans-serif';
-            ctx.fillText('○ ' + item, margin + 8, y + 2);
-            y += 22;
-        });
-        ctx.globalAlpha = 1;
-
-        // Lens label
-        this.drawLensLabel(ctx, width, height, '🎧 PERSONA LENS');
-    }
-
-    drawLensLabel(ctx, width, height, label) {
-        ctx.fillStyle = 'rgba(124, 58, 237, 0.9)';
-        ctx.beginPath();
-        ctx.roundRect(width - 115, height - 35, 105, 22, 6);
-        ctx.fill();
-
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '600 9px Inter, sans-serif';
-        ctx.textAlign = 'left';
-        ctx.fillText(label, width - 107, height - 20);
+        return `
+            <div class="lens lens--persona">
+                <header class="persona-header">
+                    <div class="persona-info">
+                        <span class="persona-icon">${personaMode === 'generic' ? '👤' : '🎧'}</span>
+                        <div class="persona-details">
+                            <span class="persona-title">PERSONA: ${personaKey}</span>
+                            <span class="persona-subtitle">${personaMode === 'generic' ? 'Baseline Analysis' : 'Targeted Profile Analysis'}</span>
+                        </div>
+                    </div>
+                    <div class="score-badge lens-highlight lens-highlight--persona" data-lens-label="Overall Score">
+                        <span class="score-value">${score}%</span>
+                        <span class="score-label">MATCH</span>
+                    </div>
+                </header>
+                
+                <div class="relevance-sections">
+                    <section class="relevance-section">
+                        <h3 class="section-title section-title--high">
+                            <span class="section-icon">✓</span> HIGH RELEVANCE
+                        </h3>
+                        ${highlightsHTML}
+                    </section>
+                    
+                    <section class="relevance-section">
+                        <h3 class="section-title section-title--medium">
+                            <span class="section-icon">◐</span> MEDIUM RELEVANCE
+                        </h3>
+                        ${mediumHTML}
+                    </section>
+                    
+                    <section class="relevance-section">
+                        <h3 class="section-title section-title--low">
+                            <span class="section-icon">○</span> LOW RELEVANCE (dimmed)
+                        </h3>
+                        ${lowHTML}
+                    </section>
+                </div>
+                
+                <div class="lens-label lens-label--purple">🎧 PERSONA LENS</div>
+            </div>
+        `;
     }
 }
+

@@ -2,116 +2,84 @@
  * HumanLens.js
  * Renders the visual product page as humans see it
  * Tier 1: Full Visual HTML/CSS/JS experience
+ * 
+ * Elements are tagged with data-highlight-* attributes for overlay highlighting:
+ * - data-highlight-persona: Elements relevant to persona analysis
+ * - data-highlight-intent: Actionable elements for intent analysis
  */
 
 export class HumanLens {
-    render(ctx, width, height, data) {
-        // Background - clean white with subtle gradient
-        const bgGradient = ctx.createLinearGradient(0, 0, 0, height);
-        bgGradient.addColorStop(0, '#ffffff');
-        bgGradient.addColorStop(1, '#f8fafc');
-        ctx.fillStyle = bgGradient;
-        ctx.fillRect(0, 0, width, height);
+    renderHTML(data, personaMode = 'generic') {
+        const features = data.features.slice(0, 4); // Show first 4 features
 
-        // Header bar
-        ctx.fillStyle = '#0f172a';
-        ctx.fillRect(0, 0, width, 50);
+        // Helper to conditionally add attributes
+        const getPersonaAttr = (label) => {
+            if (personaMode === 'targeted') {
+                return `data-highlight-persona data-lens-label="${label}"`;
+            }
+            return '';
+        };
 
-        // Brand logo placeholder
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 14px Inter, sans-serif';
-        ctx.fillText('SWEETWATER', 20, 32);
+        // Reuse intent attr logic
+        const cartIntentAttr = 'data-highlight-intent data-lens-label="Cart Action"';
+        const priceIntentAttr = 'data-highlight-intent';
 
-        // Cart icon
-        ctx.fillStyle = '#4743EF';
-        ctx.beginPath();
-        ctx.arc(width - 35, 25, 15, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#fff';
-        ctx.font = '12px Inter, sans-serif';
-        ctx.fillText('🛒', width - 42, 30);
-
-        // Product image area
-        const imgX = 25;
-        const imgY = 70;
-        const imgW = width - 50;
-        const imgH = 160;
-
-        ctx.fillStyle = '#f1f5f9';
-        ctx.beginPath();
-        ctx.roundRect(imgX, imgY, imgW, imgH, 12);
-        ctx.fill();
-
-        // Product image placeholder with DJ icon
-        ctx.fillStyle = '#cbd5e1';
-        ctx.font = '60px Inter, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('🎧', width / 2, imgY + imgH / 2 + 20);
-        ctx.textAlign = 'left';
-
-        // Product title
-        ctx.fillStyle = '#0f172a';
-        ctx.font = 'bold 16px Inter, sans-serif';
-        const title = data.entity.name.length > 35
-            ? data.entity.name.substring(0, 32) + '...'
-            : data.entity.name;
-        ctx.fillText(title, 25, 260);
-
-        // Brand name
-        ctx.fillStyle = '#64748b';
-        ctx.font = '12px Inter, sans-serif';
-        ctx.fillText(data.entity.brand.name, 25, 280);
-
-        // Price
-        ctx.fillStyle = '#dc2626';
-        ctx.font = 'bold 28px Inter, sans-serif';
-        ctx.fillText(data.commerce.price.formatted, 25, 320);
-
-        // Financing
-        ctx.fillStyle = '#64748b';
-        ctx.font = '11px Inter, sans-serif';
-        ctx.fillText(`Or ${data.commerce.financing.formatted}`, 25, 340);
-
-        // Availability badge
-        ctx.fillStyle = '#dcfce7';
-        ctx.beginPath();
-        ctx.roundRect(25, 355, 80, 24, 12);
-        ctx.fill();
-        ctx.fillStyle = '#166534';
-        ctx.font = '600 11px Inter, sans-serif';
-        ctx.fillText('✓ In Stock', 35, 371);
-
-        // Add to Cart button
-        const btnY = 395;
-        ctx.fillStyle = '#4743EF';
-        ctx.beginPath();
-        ctx.roundRect(25, btnY, width - 50, 45, 10);
-        ctx.fill();
-
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 14px Inter, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('Add to Cart', width / 2, btnY + 28);
-        ctx.textAlign = 'left';
-
-        // Features preview
-        ctx.fillStyle = '#64748b';
-        ctx.font = '10px Inter, sans-serif';
-        ctx.fillText('• 10.1" Touchscreen • NFC • Pro DJ Link', 25, 465);
-
-        // Lens label
-        this.drawLensLabel(ctx, width, height, '👤 HUMAN VIEW');
-    }
-
-    drawLensLabel(ctx, width, height, label) {
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.7)';
-        ctx.beginPath();
-        ctx.roundRect(10, height - 30, 100, 22, 6);
-        ctx.fill();
-
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '600 9px Inter, sans-serif';
-        ctx.textAlign = 'left';
-        ctx.fillText(label, 18, height - 15);
+        return `
+            <div class="lens lens--human">
+                <header class="human-header">
+                    <div class="header-left">
+                        <img src="${data.entity.seller.logo}" 
+                             alt="${data.entity.seller.name}" 
+                             class="seller-logo" 
+                             onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+                        <span class="seller-name-fallback" style="display:none">${data.entity.seller.name}</span>
+                    </div>
+                    <div class="cart-icon" ${cartIntentAttr}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                    </div>
+                </header>
+                
+                <div class="product-hero">
+                    <div class="brand-badge" ${getPersonaAttr('Brand')}>
+                        <img src="${data.entity.brand.logo}" 
+                             alt="${data.entity.brand.name}"
+                             class="brand-logo-img"
+                             onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+                        <span class="brand-name-fallback" style="display:none">${data.entity.brand.name}</span>
+                    </div>
+                    <div class="product-image-container" ${getPersonaAttr('Product Image')}>
+                        <img src="${data.entity.image}" 
+                             alt="${data.entity.name}"
+                             class="product-image-actual"
+                             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                        <div class="product-image-fallback" style="display:none">
+                            <span class="product-emoji">🎧</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="product-info">
+                    <h1 class="product-title" ${getPersonaAttr('Product Name')}>${data.entity.name}</h1>
+                    <p class="product-description">${data.entity.description}</p>
+                    
+                    <div class="price-section" ${priceIntentAttr} ${getPersonaAttr('Pricing')}>
+                        <span class="price">${data.commerce.price.formatted}</span>
+                        <span class="availability-badge">✓ ${data.commerce.availabilityText}</span>
+                    </div>
+                    <span class="financing" ${priceIntentAttr} data-lens-label="Financing">${data.commerce.financing.formatted}</span>
+                    
+                    <button class="add-to-cart-btn" data-highlight-intent data-lens-label="Primary CTA">Add to Cart</button>
+                    
+                    <div class="features-list" ${getPersonaAttr('Key Features')}>
+                        <h3 class="features-heading">Key Features</h3>
+                        <ul>
+                            ${features.map(f => `<li>${f}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="lens-label">👤 HUMAN VISITOR</div>
+            </div>
+        `;
     }
 }

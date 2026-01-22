@@ -9,23 +9,67 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/style.css" />
 </head>
 
 <body>
   <div id="app">
-    <canvas id="cube-canvas"></canvas>
-
     <!-- Lens Info Panel -->
     <aside id="lens-panel" class="lens-panel">
       <div class="lens-header">
         <span id="lens-icon" class="lens-icon">👤</span>
         <div class="lens-title-wrap">
-          <h2 id="lens-title" class="lens-title">Human View</h2>
-          <span id="lens-tier" class="lens-tier">Tier 1</span>
+          <h2 id="lens-title" class="lens-title">Human Visitor</h2>
+          <span id="lens-tier" class="lens-tier">Full HTML/CSS/JS</span>
         </div>
       </div>
       <p id="lens-format" class="lens-format">Full Visual HTML/CSS/JS</p>
       <p id="lens-description" class="lens-description">The full visual experience designed for human visitors.</p>
+
+
+      <!-- Product Selector -->
+      <div class="product-selector">
+        <h3>📦 Product Source</h3>
+        <div class="product-toggles">
+          <button class="product-btn active" data-product="sweetwater">Sweetwater</button>
+          <button class="product-btn" data-product="porch_patio">Porch+Patio</button>
+        </div>
+      </div>
+
+
+      <!-- Persona Scope Toggle -->
+      <div class="product-selector">
+        <h3>👤 Persona Scope</h3>
+        <div class="product-toggles">
+          <button class="persona-btn active" data-mode="generic">Generic</button>
+          <button class="persona-btn" data-mode="targeted">Targeted (AI)</button>
+        </div>
+      </div>
+
+      <!-- Diagnostic Lens Overlays -->
+      <div class="diagnostic-overlays">
+        <h3>🔍 Diagnostic Lenses</h3>
+        <div class="overlay-toggle" id="persona-toggle">
+          <div class="overlay-info">
+            <span class="overlay-icon">🎧</span>
+            <span class="overlay-name">Persona Relevance</span>
+          </div>
+          <div class="overlay-status">
+            <span class="overlay-key">↑</span>
+            <span class="overlay-state" id="persona-state">OFF</span>
+          </div>
+        </div>
+        <div class="overlay-toggle" id="intent-toggle">
+          <div class="overlay-info">
+            <span class="overlay-icon">⚡</span>
+            <span class="overlay-name">Intent/Action Scope</span>
+          </div>
+          <div class="overlay-status">
+            <span class="overlay-key">↓</span>
+            <span class="overlay-state" id="intent-state">OFF</span>
+          </div>
+        </div>
+      </div>
 
       <div class="agent-thoughts">
         <h3>🤖 Agent Thoughts</h3>
@@ -38,24 +82,20 @@
     <!-- Bottom UI -->
     <div id="ui-overlay">
       <div class="face-indicator">
-        <span class="face-dot active" data-face="0" title="Human View"></span>
-        <span class="face-dot" data-face="1" title="Browser Agent"></span>
-        <span class="face-dot" data-face="2" title="Crawler"></span>
-        <span class="face-dot" data-face="3" title="Transaction"></span>
-        <span class="face-dot" data-face="4" title="Persona"></span>
-        <span class="face-dot" data-face="5" title="Action"></span>
+        <span class="face-dot active" data-face="0" title="Human Visitor">👤</span>
+        <span class="face-dot" data-face="1" title="Browser Agent">🤖</span>
+        <span class="face-dot" data-face="2" title="Crawler/Learner">📚</span>
+        <span class="face-dot" data-face="3" title="Transaction API">💳</span>
       </div>
       <div class="instructions">
-        <span class="key">←</span><span class="key">→</span><span class="key">↑</span><span class="key">↓</span>
+        <span class="key">←</span><span class="key">→</span>
         Navigate
+        <span class="separator">•</span>
+        <span class="key">↑</span> Persona
+        <span class="key">↓</span> Intent
         <span class="separator">•</span>
         <span class="gesture">Scroll</span> Zoom
       </div>
-    </div>
-
-    <div id="loading-overlay" class="hidden">
-      <div class="loading-spinner"></div>
-      <p>Loading AI Rail Lenses...</p>
     </div>
   </div>
   <script type="module" src="/src/main.js"></script>

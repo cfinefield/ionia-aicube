@@ -5,107 +5,94 @@
  */
 
 export class TransactionLens {
-    render(ctx, width, height, data) {
-        // Dark code editor background
-        ctx.fillStyle = '#1e1e1e';
-        ctx.fillRect(0, 0, width, height);
-
-        // Line numbers gutter
-        ctx.fillStyle = '#2d2d2d';
-        ctx.fillRect(0, 0, 35, height);
-
-        let y = 25;
-        let lineNum = 1;
-        const margin = 45;
-        const lineHeight = 14;
-
+    renderHTML(data) {
         const jsonLines = [
-            { text: '{', color: '#d4d4d4' },
-            { text: '  "@context": "https://schema.org",', color: '#ce9178' },
-            { text: '  "@type": "Product",', color: '#ce9178' },
-            { text: `  "name": "${data.entity.name.substring(0, 30)}...",`, color: '#ce9178' },
-            { text: `  "sku": "${data.entity.id}",`, color: '#ce9178' },
-            { text: '  "brand": {', color: '#d4d4d4' },
-            { text: '    "@type": "Brand",', color: '#ce9178' },
-            { text: `    "name": "${data.entity.brand.name}"`, color: '#ce9178' },
-            { text: '  },', color: '#d4d4d4' },
-            { text: '  "offers": {', color: '#d4d4d4' },
-            { text: '    "@type": "Offer",', color: '#ce9178' },
-            { text: `    "price": ${data.commerce.price.value},`, color: '#b5cea8' },
-            { text: `    "priceCurrency": "${data.commerce.price.currency}",`, color: '#ce9178' },
-            { text: `    "availability": "InStock",`, color: '#ce9178' },
-            { text: '    "seller": {', color: '#d4d4d4' },
-            { text: '      "@type": "Organization",', color: '#ce9178' },
-            { text: `      "name": "${data.entity.seller.name}"`, color: '#ce9178' },
-            { text: '    }', color: '#d4d4d4' },
-            { text: '  },', color: '#d4d4d4' },
-            { text: '  "actions": [{', color: '#4ec9b0' },
-            { text: '    "type": "add-to-cart",', color: '#4ec9b0' },
-            { text: '    "endpoint": "/api/cart",', color: '#4ec9b0' },
-            { text: '    "method": "POST"', color: '#4ec9b0' },
-            { text: '  }]', color: '#d4d4d4' },
-            { text: '}', color: '#d4d4d4' }
+            { text: '{', type: 'bracket' },
+            { text: '  "@context": "https://schema.org",', type: 'string' },
+            { text: '  "@type": "Product",', type: 'string' },
+            { text: `  "name": "${data.entity.name.substring(0, 28)}...",`, type: 'string', highlight: 'persona', label: 'Entity Name' },
+            { text: `  "sku": "${data.entity.id}",`, type: 'string' },
+            { text: '  "brand": {', type: 'bracket' },
+            { text: '    "@type": "Brand",', type: 'string' },
+            { text: `    "name": "${data.entity.brand.name}"`, type: 'string', highlight: 'persona', label: 'Brand Entity' },
+            { text: '  },', type: 'bracket' },
+            { text: '  "offers": {', type: 'bracket' },
+            { text: '    "@type": "Offer",', type: 'string' },
+            { text: `    "price": ${data.commerce.price.value},`, type: 'number', highlight: 'persona', label: 'Price Value' },
+            { text: `    "priceCurrency": "${data.commerce.price.currency}",`, type: 'string' },
+            { text: '    "availability": "InStock"', type: 'string', highlight: 'persona', label: 'Stock Status' },
+            { text: '  },', type: 'bracket' },
+            { text: '  "actions": [{', type: 'action', highlight: 'intent', label: 'Action Schema' },
+            { text: '    "type": "add-to-cart",', type: 'action', highlight: 'intent', label: 'Action Type' },
+            { text: '    "endpoint": "/api/cart"', type: 'action', highlight: 'intent', label: 'API Endpoint' },
+            { text: '  }]', type: 'bracket', highlight: 'intent', label: 'Action Block' },
+            { text: '}', type: 'bracket' }
         ];
 
-        jsonLines.forEach(line => {
-            // Line number
-            ctx.fillStyle = '#5a5a5a';
-            ctx.font = '10px "SF Mono", monospace';
-            ctx.textAlign = 'right';
-            ctx.fillText(lineNum.toString(), 28, y);
-            ctx.textAlign = 'left';
+        const linesHTML = jsonLines.map((line, i) => {
+            const lineNum = (i + 1).toString().padStart(2, ' ');
+            let attributes = '';
+            if (line.highlight === 'persona') attributes = `data-highlight-persona data-lens-label="${line.label || 'Relevance'}"`;
+            if (line.highlight === 'intent') attributes = `data-highlight-intent data-lens-label="${line.label || 'Action'}"`;
 
-            // Code
-            ctx.fillStyle = line.color;
-            ctx.font = '10px "SF Mono", monospace';
+            return `
+                <div class="code-line" ${attributes}>
+                    <span class="line-num">${lineNum}</span>
+                    <span class="code code--${line.type}">${this.escapeHTML(line.text)}</span>
+                </div>
+            `;
+        }).join('');
 
-            // Syntax highlighting for keys
-            const text = line.text;
-            if (text.includes(':')) {
-                const parts = text.split(':');
-                const keyPart = parts[0];
-                const valuePart = ':' + parts.slice(1).join(':');
+        return `
+            <div class="lens lens--transaction">
+                <div class="connectivity-status-bar">
+                    <div class="status-item status-success" data-tooltip="Universal Commerce Protocol detected. Ready for Google Gemini & Search.">
+                        <div class="status-icon-img">
+                            <img src="/logos/ucp.png" alt="UCP">
+                        </div>
+                        <span class="status-dot"></span>
+                    </div>
+                    <div class="status-item status-success" data-tooltip="Agent Commerce Protocol detected. Ready for ChatGPT & Instant Checkout.">
+                        <div class="status-icon-img">
+                            <img src="/logos/acp.png" alt="ACP">
+                        </div>
+                        <span class="status-dot"></span>
+                    </div>
+                    <div class="status-item status-partial" data-tooltip="Model Context Protocol detected. Ready for Claude & RAG engines.">
+                        <div class="status-icon-img">
+                            <img src="/logos/mcp.png" alt="MCP">
+                        </div>
+                        <span class="status-dot"></span>
+                    </div>
+                    <div class="status-item status-missing" data-tooltip="Buy with Prime widget detected. Ready for Amazon Alexa & Shopping.">
+                        <div class="status-icon-img">
+                            <img src="/logos/prime.png" alt="Prime">
+                        </div>
+                        <span class="status-dot"></span>
+                    </div>
+                </div>
 
-                // Key color (property names)
-                ctx.fillStyle = '#9cdcfe';
-                ctx.fillText(keyPart, margin, y);
-
-                // Value color
-                ctx.fillStyle = line.color;
-                ctx.fillText(valuePart, margin + ctx.measureText(keyPart).width, y);
-            } else {
-                ctx.fillText(text, margin, y);
-            }
-
-            y += lineHeight;
-            lineNum++;
-        });
-
-        // Status bar
-        ctx.fillStyle = '#007acc';
-        ctx.fillRect(0, height - 25, width, 25);
-
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '10px Inter, sans-serif';
-        ctx.fillText('JSON-LD • Schema.org/Product', 10, height - 8);
-
-        ctx.textAlign = 'right';
-        ctx.fillText('API Ready ✓', width - 10, height - 8);
-        ctx.textAlign = 'left';
-
-        // Lens label
-        this.drawLensLabel(ctx, width, height - 30, '💳 TRANSACTION API');
+                <div class="code-editor">
+                    <div class="gutter"></div>
+                    <div class="code-content">
+                        ${linesHTML}
+                    </div>
+                </div>
+                
+                <div class="status-bar">
+                    <span>JSON-LD • Schema.org/Product</span>
+                    <span>API Ready ✓</span>
+                </div>
+                
+                <div class="lens-label lens-label--blue">💳 TRANSACTION API</div>
+            </div>
+        `;
     }
 
-    drawLensLabel(ctx, width, height, label) {
-        ctx.fillStyle = 'rgba(0, 122, 204, 0.9)';
-        ctx.beginPath();
-        ctx.roundRect(width - 135, height - 35, 125, 22, 6);
-        ctx.fill();
-
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '600 9px Inter, sans-serif';
-        ctx.textAlign = 'left';
-        ctx.fillText(label, width - 127, height - 20);
+    escapeHTML(str) {
+        return str.replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
     }
 }

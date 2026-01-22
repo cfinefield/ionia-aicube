@@ -1,6 +1,6 @@
 /**
  * LensManager.js
- * Orchestrates rendering of all lens views to cube faces
+ * Orchestrates rendering of all lens views as HTML
  */
 
 import { productData, lensMetadata } from '../data/KnowledgeGraph.js';
@@ -27,13 +27,21 @@ export class LensManager {
     }
 
     /**
-     * Render a specific lens to a canvas context
+     * Update data source and trigger re-render if needed
      */
-    renderLens(faceIndex, ctx, width, height) {
+    setData(newData) {
+        this.data = newData;
+    }
+
+    /**
+     * Render a specific lens to HTML string
+     */
+    renderLens(faceIndex, personaMode = 'generic') {
         const lens = this.lenses[faceIndex];
         if (lens) {
-            lens.render(ctx, width, height, this.data);
+            return lens.renderHTML(this.data, personaMode);
         }
+        return '<div class="lens-placeholder">Loading...</div>';
     }
 
     /**

@@ -1,186 +1,169 @@
-import './style.css';
-import * as THREE from 'three';
-import { Cube } from './Cube.js';
-import { LiquidBackground } from './LiquidBackground.js';
-import { CubeController } from './CubeController.js';
-import { DesignManager } from './DesignManager.js';
+import { CSSCube } from './CSSCube.js';
+import { lensMetadata, products } from './data/KnowledgeGraph.js';
 
 class App {
   constructor() {
-    this.canvas = document.getElementById('cube-canvas');
-    this.scene = new THREE.Scene();
-    this.clock = new THREE.Clock();
-
-    this.setupCamera();
-    this.setupRenderer();
-    this.setupLights();
-    this.setupBackground();
+    this.container = document.getElementById('app');
     this.setupCube();
-    this.setupController();
-    this.setupDesigns();
     this.setupLensPanel();
+    this.setupFaceIndicatorClicks();
+    this.setupOverlayToggles();
+    this.setupProductToggles();
+    this.setupPersonaToggles();
 
-    window.addEventListener('resize', this.onResize.bind(this));
-    this.onResize();
-
-    this.animate();
-  }
-
-  setupCamera() {
-    this.camera = new THREE.PerspectiveCamera(
-      45,
-      window.innerWidth / window.innerHeight,
-      0.1,
-      1000
-    );
-    this.camera.position.z = 5;
-    this.baseZoom = 5;
-    this.zoomedZoom = 2.2;
-  }
-
-  setupRenderer() {
-    this.renderer = new THREE.WebGLRenderer({
-      canvas: this.canvas,
-      antialias: true,
-      alpha: true,
-      powerPreference: 'high-performance'
-    });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.2;
-    this.renderer.outputColorSpace = THREE.SRGBColorSpace;
-  }
-
-  setupLights() {
-    // Ambient light for base illumination
-    const ambient = new THREE.AmbientLight(0xffffff, 0.4);
-    this.scene.add(ambient);
-
-    // Key light - main illumination
-    const keyLight = new THREE.DirectionalLight(0xffffff, 1.2);
-    keyLight.position.set(5, 5, 5);
-    this.scene.add(keyLight);
-
-    // Fill light - soften shadows
-    const fillLight = new THREE.DirectionalLight(0x9089E2, 0.5);
-    fillLight.position.set(-5, 2, 3);
-    this.scene.add(fillLight);
-
-    // Rim light - edge highlight
-    const rimLight = new THREE.DirectionalLight(0x4743EF, 0.8);
-    rimLight.position.set(0, -5, -5);
-    this.scene.add(rimLight);
-
-    // Top accent light
-    const topLight = new THREE.PointLight(0x0017E9, 0.6, 10);
-    topLight.position.set(0, 4, 0);
-    this.scene.add(topLight);
-  }
-
-  setupBackground() {
-    this.background = new LiquidBackground(this.renderer, this.scene);
+    // Initial panel update
+    this.updateLensPanel(0);
   }
 
   setupCube() {
-    this.cube = new Cube();
-    this.scene.add(this.cube.group);
-  }
+    this.cube = new CSSCube(this.container);
 
-  setupController() {
-    this.controller = new CubeController(this.cube, this.camera, this);
-  }
-
-  setupDesigns() {
-    this.designManager = new DesignManager(this.cube);
-
-    // Wire up lens change notifications
-    this.designManager.onLensChange = (faceIndex) => {
+    // Wire up face change events
+    this.cube.onFaceChange = (faceIndex) => {
       this.updateLensPanel(faceIndex);
     };
 
-    this.designManager.loadInitialDesigns();
+    // Wire up overlay change events
+    this.cube.onOverlayChange = (overlays) => {
+      this.updateOverlayIndicators(overlays);
+    };
+
+    // Expose switchProduct for testing/demo
+    window.switchProduct = (productId) => {
+      if (products[productId]) {
+        console.log(`Switching to product: ${productId}`);
+        this.cube.loadProduct(products[productId], productId);
+      } else {
+        console.error(`Product not found: ${productId}. Available: ${Object.keys(products).join(', ')}`);
+      }
+    };
   }
 
   setupLensPanel() {
-    // Cache panel elements
     this.panelElements = {
       icon: document.getElementById('lens-icon'),
       title: document.getElementById('lens-title'),
       tier: document.getElementById('lens-tier'),
       format: document.getElementById('lens-format'),
       description: document.getElementById('lens-description'),
-      thoughtsList: document.getElementById('agent-thoughts-list')
+      thoughtsList: document.getElementById('agent-thoughts-list'),
+      personaState: document.getElementById('persona-state'),
+      intentState: document.getElementById('intent-state')
     };
   }
 
+  setupFaceIndicatorClicks() {
+    const dots = document.querySelectorAll('.face-dot');
+    dots.forEach((dot, index) => {
+      dot.addEventListener('click', () => {
+        this.cube.goToFace(index);
+      });
+    });
+  }
+
+  setupOverlayToggles() {
+    // Make overlay toggles clickable
+    const personaToggle = document.getElementById('persona-toggle');
+    const intentToggle = document.getElementById('intent-toggle');
+
+    if (personaToggle) {
+      personaToggle.addEventListener('click', () => {
+        this.cube.toggleOverlay('persona');
+      });
+    }
+
+    if (intentToggle) {
+      intentToggle.addEventListener('click', () => {
+        this.cube.toggleOverlay('intent');
+      });
+    }
+  }
+
+  setupProductToggles() {
+    const toggles = document.querySelectorAll('.product-btn');
+    toggles.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const productId = e.target.dataset.product;
+        if (!products[productId]) return;
+
+        // Update active state
+        toggles.forEach(t => t.classList.remove('active'));
+        e.target.classList.add('active');
+
+        // Switch data
+        console.log(`Switching to product: ${productId}`);
+        this.cube.loadProduct(products[productId], productId);
+      });
+    });
+  }
+
+  setupPersonaToggles() {
+    const toggles = document.querySelectorAll('.persona-btn');
+    toggles.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const mode = e.target.dataset.mode;
+
+        // Update active state
+        toggles.forEach(t => t.classList.remove('active'));
+        e.target.classList.add('active');
+
+        // Switch persona mode
+        console.log(`Switching persona mode to: ${mode}`);
+        this.cube.setPersonaMode(mode);
+      });
+    });
+  }
+
   updateLensPanel(faceIndex) {
-    const metadata = this.designManager.getLensMetadata(faceIndex);
-    if (!metadata) return;
+    // Use the content tier info from the cube
+    const tier = this.cube.getContentTier(faceIndex);
+    if (!tier) return;
 
-    const { icon, title, tier, format, description, thoughtsList } = this.panelElements;
+    // Also get the lens metadata for agent thoughts
+    const metadata = lensMetadata[faceIndex];
 
-    // Update panel content
-    if (icon) icon.textContent = metadata.icon;
-    if (title) title.textContent = metadata.name;
-    if (tier) tier.textContent = typeof metadata.tier === 'number' ? `Tier ${metadata.tier}` : metadata.tier;
-    if (format) format.textContent = metadata.format;
-    if (description) description.textContent = metadata.description;
+    const { icon, title, tier: tierEl, format, description, thoughtsList } = this.panelElements;
 
-    // Update agent thoughts
-    if (thoughtsList && metadata.agentThoughts) {
+    if (icon) icon.textContent = tier.icon;
+    if (title) title.textContent = tier.name;
+    if (tierEl) tierEl.textContent = tier.format;
+    if (format) format.textContent = tier.format;
+
+    // Description based on tier
+    const descriptions = {
+      'human': 'Gets the full, rich, visually designed website for persuasion and branding.',
+      'browser-agent': 'Gets a simplified but interactive page for reliable navigation and form filling.',
+      'crawler': 'Gets a lightweight, narrative file to efficiently understand and index content.',
+      'transaction': 'Interacts with a pure data API to perform actions with 100% precision.'
+    };
+    if (description) description.textContent = descriptions[tier.id] || '';
+
+    if (thoughtsList && metadata && metadata.agentThoughts) {
       thoughtsList.innerHTML = metadata.agentThoughts
         .map(thought => `<li>${thought}</li>`)
         .join('');
     }
   }
 
-  onResize() {
-    const width = window.innerWidth;
-    const height = window.innerHeight;
+  updateOverlayIndicators(overlays) {
+    const { personaState, intentState } = this.panelElements;
 
-    this.camera.aspect = width / height;
-    this.camera.updateProjectionMatrix();
-
-    this.renderer.setSize(width, height);
-
-    if (this.background) {
-      this.background.onResize(width, height);
-    }
-  }
-
-  animate() {
-    requestAnimationFrame(this.animate.bind(this));
-
-    const delta = this.clock.getDelta();
-    const elapsed = this.clock.getElapsedTime();
-
-    // Update background
-    if (this.background) {
-      this.background.update(elapsed);
+    if (personaState) {
+      personaState.textContent = overlays.persona ? 'ON' : 'OFF';
+      personaState.classList.toggle('active', overlays.persona);
     }
 
-    // Update cube
-    if (this.cube) {
-      this.cube.update(elapsed, delta);
+    if (intentState) {
+      intentState.textContent = overlays.intent ? 'ON' : 'OFF';
+      intentState.classList.toggle('active', overlays.intent);
     }
 
-    // Update controller animations
-    if (this.controller) {
-      this.controller.update(delta);
-    }
+    // Also update sidebar toggle styling
+    const personaToggle = document.getElementById('persona-toggle');
+    const intentToggle = document.getElementById('intent-toggle');
 
-    // Render scene
-    this.renderer.render(this.scene, this.camera);
-  }
-
-  updateFaceIndicator(index) {
-    const dots = document.querySelectorAll('.face-dot');
-    dots.forEach((dot, i) => {
-      dot.classList.toggle('active', i === index);
-    });
-
-    // Also update the lens panel
-    this.updateLensPanel(index);
+    if (personaToggle) personaToggle.classList.toggle('active', overlays.persona);
+    if (intentToggle) intentToggle.classList.toggle('active', overlays.intent);
   }
 }
 
