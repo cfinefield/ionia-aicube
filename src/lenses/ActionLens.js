@@ -6,6 +6,9 @@
 
 export class ActionLens {
     renderHTML(data) {
+        console.log('ActionLens received data:', data);
+        console.log('Suggestions:', data.suggestions);
+
         const intentsHTML = data.intents.map((intent, index) => {
             const confidence = intent.confidence;
             const pct = Math.round(confidence * 100);
@@ -32,11 +35,11 @@ export class ActionLens {
             `;
         }).join('');
 
-        const suggestions = [
-            { text: 'Add data-intent-scope="financing" to loan CTA', priority: 'high' },
-            { text: 'Consider aria-label for icon-only buttons', priority: 'medium' },
-            { text: 'Add structured confirmation flow', priority: 'medium' }
-        ];
+        const suggestions = (data.suggestions && data.suggestions.length > 0)
+            ? data.suggestions
+            : [
+                { text: 'No specific improvements detected', priority: 'low' }
+            ];
 
         const suggestionsHTML = suggestions.map(s => `
             <div class="suggestion-item suggestion-item--${s.priority}">

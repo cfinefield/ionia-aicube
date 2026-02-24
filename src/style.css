@@ -894,8 +894,9 @@ body {
 
 .token-count {
   position: absolute;
-  bottom: 12px;
-  left: 16px;
+  bottom: 20px;
+  right: 20px;
+  left: auto;
   font-family: 'SF Mono', monospace;
   font-size: 10px;
   color: #8b949e;

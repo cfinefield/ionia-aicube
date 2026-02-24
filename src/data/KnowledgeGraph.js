@@ -264,11 +264,18 @@ export const lensMetadata = {
         format: 'Full Visual HTML/CSS/JS',
         purpose: 'Persuasion, branding, and manual UX',
         description: 'The full visual experience designed for human visitors. Rich styling, images, and marketing copy.',
-        agentThoughts: [
-            'Detected product page with hero image',
-            'Price displayed prominently: $2,999.00',
-            'Primary CTA: "Add to Cart" button'
-        ]
+        agentThoughts: {
+            sweetwater: [
+                'Detected product page with hero image',
+                'Price displayed prominently: $2,999.00',
+                'Primary CTA: "Add to Cart" button'
+            ],
+            porch_patio: [
+                'Detected product page with lifestyle imagery',
+                'Price displayed prominently: $2,764.00',
+                'Primary CTA: "Add to Cart" button'
+            ]
+        }
     },
     1: {
         id: 'browser-agent',
@@ -278,12 +285,20 @@ export const lensMetadata = {
         format: 'Semantic HTML (Simplified)',
         purpose: 'Reliable navigation for tools like Project Mariner',
         description: 'Semantic structure for browser automation agents. Clean DOM tree with labeled elements.',
-        agentThoughts: [
-            'Scanning for semantic landmarks...',
-            'Found: header, main, 1 interactive button',
-            'Button labeled "Add to Cart" with data-action attribute',
-            'Intent-scope: purchase confirmed'
-        ]
+        agentThoughts: {
+            sweetwater: [
+                'Scanning for semantic landmarks...',
+                'Found: header, main, 1 interactive button',
+                'Button labeled "Add to Cart" with data-action attribute',
+                'Intent-scope: purchase confirmed'
+            ],
+            porch_patio: [
+                'Scanning for semantic landmarks...',
+                'Found: header, main, 2 interactive buttons',
+                'Buttons: "Add to Cart" and "Select Color"',
+                'Intent-scope: purchase + customization'
+            ]
+        }
     },
     2: {
         id: 'crawler',
@@ -308,13 +323,22 @@ export const lensMetadata = {
         format: 'JSON API (AP2/MCP)',
         purpose: '100% precise data for automated purchases',
         description: 'Structured JSON data for transactional agents performing automated actions.',
-        agentThoughts: [
-            'Parsing structured data attributes...',
-            'Price: 2999.00 USD (verified)',
-            'SKU: CDJ3000x',
-            'Availability: InStock',
-            'Ready for automated checkout'
-        ]
+        agentThoughts: {
+            sweetwater: [
+                'Parsing structured data attributes...',
+                'Price: 2999.00 USD (verified)',
+                'SKU: CDJ3000x',
+                'Availability: InStock',
+                'Ready for automated checkout'
+            ],
+            porch_patio: [
+                'Parsing structured data attributes...',
+                'Price: 2764.00 USD (verified)',
+                'SKU: CTF3446RECT',
+                'Availability: InStock',
+                'Ready for automated checkout'
+            ]
+        }
     },
     4: {
         id: 'persona',

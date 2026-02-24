@@ -6,42 +6,55 @@
 
 export class TransactionLens {
     renderHTML(data) {
+        // Only generate lines if we have minimal valid data
+        if (!data.entity.name && !data.commerce.price.value) {
+            return `
+            <div class="lens lens--transaction">
+                <div class="status-bar">
+                    <span>No Structured Data Found</span>
+                </div>
+                <div class="lens-label lens-label--blue">💳 TRANSACTION API</div>
+            </div>`;
+        }
+
         const jsonLines = [
             { text: '{', type: 'bracket' },
             { text: '  "@context": "https://schema.org",', type: 'string' },
             { text: '  "@type": "Product",', type: 'string' },
-            { text: `  "name": "${data.entity.name.substring(0, 28)}...",`, type: 'string', highlight: 'persona', label: 'Entity Name' },
-            { text: `  "sku": "${data.entity.id}",`, type: 'string' },
-            { text: '  "brand": {', type: 'bracket' },
-            { text: '    "@type": "Brand",', type: 'string' },
-            { text: `    "name": "${data.entity.brand.name}"`, type: 'string', highlight: 'persona', label: 'Brand Entity' },
-            { text: '  },', type: 'bracket' },
-            { text: '  "offers": {', type: 'bracket' },
-            { text: '    "@type": "Offer",', type: 'string' },
-            { text: `    "price": ${data.commerce.price.value},`, type: 'number', highlight: 'persona', label: 'Price Value' },
-            { text: `    "priceCurrency": "${data.commerce.price.currency}",`, type: 'string' },
-            { text: '    "availability": "InStock"', type: 'string', highlight: 'persona', label: 'Stock Status' },
-            { text: '  },', type: 'bracket' },
-            { text: '  "actions": [{', type: 'action', highlight: 'intent', label: 'Action Schema' },
-            { text: '    "type": "add-to-cart",', type: 'action', highlight: 'intent', label: 'Action Type' },
-            { text: '    "endpoint": "/api/cart"', type: 'action', highlight: 'intent', label: 'API Endpoint' },
-            { text: '  }]', type: 'bracket', highlight: 'intent', label: 'Action Block' },
+            ...(data.entity.name ? [{ text: `  "name": "${data.entity.name.substring(0, 28)}...",`, type: 'string', highlight: 'persona', label: 'Entity Name' }] : []),
+            ...(data.entity.id ? [{ text: `  "sku": "${data.entity.id}",`, type: 'string' }] : []),
+            ...(data.entity.brand && data.entity.brand.name ? [
+                { text: '  "brand": {', type: 'bracket' },
+                { text: '    "@type": "Brand",', type: 'string' },
+                { text: `    "name": "${data.entity.brand.name}"`, type: 'string', highlight: 'persona', label: 'Brand Entity' },
+                { text: '  },', type: 'bracket' }
+            ] : []),
+            ...(data.commerce.price.value ? [
+                { text: '  "offers": {', type: 'bracket' },
+                { text: '    "@type": "Offer",', type: 'string' },
+                { text: `    "price": ${data.commerce.price.value},`, type: 'number', highlight: 'persona', label: 'Price Value' },
+                { text: `    "priceCurrency": "${data.commerce.price.currency || 'USD'}",`, type: 'string' },
+                { text: '    "availability": "InStock"', type: 'string', highlight: 'persona', label: 'Stock Status' },
+                { text: '  },', type: 'bracket' }
+            ] : []),
             { text: '}', type: 'bracket' }
         ];
 
-        const linesHTML = jsonLines.map((line, i) => {
-            const lineNum = (i + 1).toString().padStart(2, ' ');
-            let attributes = '';
-            if (line.highlight === 'persona') attributes = `data-highlight-persona data-lens-label="${line.label || 'Relevance'}"`;
-            if (line.highlight === 'intent') attributes = `data-highlight-intent data-lens-label="${line.label || 'Action'}"`;
+        const linesHTML = jsonLines
+            .filter(line => !line.text.includes('null') && !line.text.includes('undefined')) // Filter missing data
+            .map((line, i) => {
+                const lineNum = (i + 1).toString().padStart(2, ' ');
+                let attributes = '';
+                if (line.highlight === 'persona') attributes = `data-highlight-persona data-lens-label="${line.label || 'Relevance'}"`;
+                if (line.highlight === 'intent') attributes = `data-highlight-intent data-lens-label="${line.label || 'Action'}"`;
 
-            return `
+                return `
                 <div class="code-line" ${attributes}>
                     <span class="line-num">${lineNum}</span>
                     <span class="code code--${line.type}">${this.escapeHTML(line.text)}</span>
                 </div>
             `;
-        }).join('');
+            }).join('');
 
         return `
             <div class="lens lens--transaction">

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connect AI Rail to Claude</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #0d1117;
+            color: #c9d1d9;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        h1 {
+            margin-top: 0;
+            color: #ffffff;
+        }
+
+        .code-block {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 1rem;
+            overflow-x: auto;
+            font-family: monospace;
+            margin: 1rem 0;
+            position: relative;
+        }
+
+        button {
+            background: #238636;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            font-size: 1rem;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #2ea043;
+        }
+
+        .step {
+            margin-bottom: 1.5rem;
+        }
+
+        .step-title {
+            font-weight: 600;
+            color: #58a6ff;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card">
+        <h1>🔌 Connect AI Rail</h1>
+        <p>Enable the <b>LensCrafter</b> extraction tool inside Claude Desktop.</p>
+
+        <div class="step">
+            <span class="step-title">Step 1: Open Config</span>
+            <p>Open this file on your
+                Mac:<br><code>~/Library/Application Support/Claude/claude_desktop_config.json</code></p>
+        </div>
+
+        <div class="step">
+            <span class="step-title">Step 2: Add Server</span>
+            <p>Paste this into the <code>"mcpServers"</code> object:</p>
+            <div class="code-block" id="config-code">
+                "lenscrafter": {
+                "command": "npx",
+                "args": [
+                "-y",
+                "mcp-remote",
+                "https://airail.io/mcp/messages?apiKey=YOUR_SECRET_KEY"
+                ]
+                }</div>
+            <button onclick="copyConfig()">Copy Snippet</button>
+        </div>
+
+        <div class="step">
+            <span class="step-title">Step 3: Restart Claude</span>
+            <p>Restart the app. Look for the 🔌 icon.</p>
+        </div>
+    </div>
+
+    <script>
+        function copyConfig() {
+            const code = document.getElementById('config-code').innerText;
+            navigator.clipboard.writeText(code);
+            const btn = document.querySelector('button');
+            const original = btn.innerText;
+            btn.innerText = "Copied!";
+            btn.style.background = "#1f6feb";
+            setTimeout(() => {
+                btn.innerText = original;
+                btn.style.background = "#238636";
+            }, 2000);
+        }
+    </script>
+</body>
+
+</html>

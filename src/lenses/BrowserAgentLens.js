@@ -6,17 +6,18 @@
 
 export class BrowserAgentLens {
     renderHTML(data) {
-        const nodes = [
+        // Check for dynamic nodes from LensCrafter
+        const nodes = data.semanticStructure?.nodes || [
             { level: 0, tag: 'html', type: 'root' },
             { level: 1, tag: 'head', type: 'meta' },
             { level: 1, tag: 'body', type: 'landmark' },
             { level: 2, tag: 'header', type: 'landmark', label: 'Brand + Cart', highlight: 'intent' },
             { level: 2, tag: 'main', type: 'landmark' },
-            { level: 3, tag: 'article', type: 'content', attr: 'data-product-id="CDJ3000x"', highlight: 'persona' },
+            { level: 3, tag: 'article', type: 'content', attr: `data-product-id="${data.entity.id}"`, highlight: 'persona' },
             { level: 4, tag: 'h1', type: 'heading', text: data.entity.name.substring(0, 25) + '...', highlight: 'persona' },
             { level: 4, tag: 'img', type: 'media', attr: 'alt="Product Image"', highlight: 'persona' },
             { level: 4, tag: 'section', type: 'content', label: 'Purchase', highlight: 'intent' },
-            { level: 5, tag: 'span', type: 'data', attr: 'data-price="2999.00"', highlight: 'persona' },
+            { level: 5, tag: 'span', type: 'data', attr: `data-price="${data.commerce.price.value?.toFixed(2) || '0.00'}"`, highlight: 'persona' },
             { level: 5, tag: 'button', type: 'interactive', attr: 'data-action="add-to-cart"', highlight: 'intent' },
             { level: 4, tag: 'section', type: 'content', label: 'Features', highlight: 'persona' },
             { level: 5, tag: 'ul', type: 'list', label: '7 items' },
@@ -57,7 +58,7 @@ export class BrowserAgentLens {
                 
                 <div class="agent-status">
                     <div class="status-line">🤖 Agent Status: READY</div>
-                    <div class="status-result">Found: 1 interactive button</div>
+                    ${nodes.length > 0 ? `<div class="status-result">Nodes: ${nodes.length}</div>` : ''}
                 </div>
                 
                 <div class="lens-label lens-label--cyan">🤖 BROWSER AGENT</div>
