@@ -4,30 +4,50 @@
 
 - project_id: `aicube`
 - repository: `cfinefield/aicube`
-- generated_at: `2026-02-24T15:22:41Z`
+- repo_role: `platform/tool`
+- primary_consumers: `general generative UI workflows, AI Rail agents`
+- generated_at: `2026-02-24T22:23:14Z`
 - generated_by: `Antigravity`
 - ownership: `o-global`
-- confidence: `medium`
+- confidence: `high`
 
-## Objective Contract (Primary)
+## Objective Contract (Enabler KPIs)
 
-- measurement: `Kickoff Documents Accepted`
-- target_value: `2`
-- due_date: `2026-02-25`
+- measurement: `Active connected Lenses deployments`
+- target_value: `10`
+- due_date: `2026-04-01`
 - owner: `Antigravity`
-- success_criteria: `DOSSIER.md and BRIEF.md pass all o-global QUALITY_GATES.md.`
+- success_criteria: `10 unique Lenses deployed. Downstream Impact: Broadens generative AI ecosystem adoption across different workflows.`
+
+- measurement: `LensCrafter extraction success rate`
+- target_value: `99.9%`
+- due_date: `2026-03-15`
+- owner: `Antigravity`
+- success_criteria: `Endpoint reliably extracts JSON-LD/HTML. Downstream Impact: Reduces "AI hallucination" support tickets resulting from bad context.`
+
+- measurement: `LensCrafter extraction latency P95 (ms)`
+- target_value: `2000`
+- due_date: `2026-05-01`
+- owner: `UNKNOWN`
+- success_criteria: `Under 2000ms query resolution. Downstream Impact: Drastically improves real-time perceived performance in browser UI.`
+
+- measurement: `Time to create and deploy new Lens (hours)`
+- target_value: `24`
+- due_date: `2026-04-15`
+- owner: `UNKNOWN`
+- success_criteria: `Devs can build and push a Lens <24h. Downstream Impact: Shorter feature delivery delays for dependent business teams.`
 
 ## Current State
 
 - stage: `build`
 - status_summary:
-  - Working client with 3D UI and Lens architecture.
-  - LensCrafter Cloudflare Worker deployed and tested with Puppeteer and Workers AI.
-  - Baseline agent documentation established in `agent-docs/` and `wiki/`.
-- last_major_change: `Implemented and deployed LensCrafter Worker (wiki/lenscrafter-worker-capabilities.md)`
+  - Deployed `lenscrafter` as a platform utility parsing agent content.
+  - Active frontend tool integration enabling the `CubeController` engine.
+  - Preparing for scale to multiple independent business case deployments.
+- last_major_change: `Implemented LensCrafter Worker (wiki/lenscrafter-worker-capabilities.md)`
 - open_questions:
-  - `UNKNOWN: What are the primary business scaling targets?`
-  - `UNKNOWN: Are there pending integrations beyond what is currently documented?`
+  - `UNKNOWN: What are the current baseline latencies for the LensCrafter worker?`
+  - `UNKNOWN: Who assumes organizational ownership over Lens integration tooling?`
 
 ## System Surface
 
@@ -41,16 +61,15 @@
 - external_integrations:
   - `Workers AI`
   - `Puppeteer`
-  - `GithubAdapter`
   - `https://airail.io/mcp/messages`
 
 ## Risks (Top 5)
 
 | risk | trigger | impact | mitigation | owner | status |
 | --- | --- | --- | --- | --- | --- |
-| `UNKNOWN` | `UNKNOWN` | `UNKNOWN` | `UNKNOWN` | `UNKNOWN` | `open` |
-| `UNKNOWN` | `UNKNOWN` | `UNKNOWN` | `UNKNOWN` | `UNKNOWN` | `open` |
-| `UNKNOWN` | `UNKNOWN` | `UNKNOWN` | `UNKNOWN` | `UNKNOWN` | `open` |
+| `Latency Spikes` | `Deep web extractions block worker` | `Browser UI freezes during calls` | `UNKNOWN` | `UNKNOWN` | `open` |
+| `Data Quality` | `Dynamic SPAs prevent pure fetch parsing` | `AI receives empty models` | `Puppeteer fallback with bot bypass` | `Antigravity` | `mitigated` |
+| `Integration Friction` | `Lens API is undocumented` | `New business tools take weeks to merge` | `Create standard Lens setup script` | `UNKNOWN` | `open` |
 | `UNKNOWN` | `UNKNOWN` | `UNKNOWN` | `UNKNOWN` | `UNKNOWN` | `open` |
 | `UNKNOWN` | `UNKNOWN` | `UNKNOWN` | `UNKNOWN` | `UNKNOWN` | `open` |
 
@@ -66,21 +85,19 @@
 
 | item | definition_of_done | measurement | target_value | due_date | owner |
 | --- | --- | --- | --- | --- | --- |
-| `Complete Kickoff Docs` | `Docs merged to main and pass QUALITY_GATES.md` | `Accepted PRs` | `1` | `2026-02-25` | `Antigravity` |
+| `Gather Baseline Metrics` | `Implement / query worker logs for P95 latency` | `Defined KPI baselines` | `1` | `2026-03-03` | `Antigravity` |
 
 ## Evidence References
 
-- `o-global/QUALITY_GATES.md`
 - `package.json`
 - `wiki/lenscrafter-worker-capabilities.md`
+- `o-global/QUALITY_GATES.md`
 
 ## Unknowns
 
-- `UNKNOWN: Business metrics or primary adoption targets`
-- `UNKNOWN: Identified system risks`
-- `UNKNOWN: Specific owner for the system adoption`
-- `UNKNOWN: Exact next feature priorities after documentation`
-- `UNKNOWN: Clear unblock plan for any potential blockers`
+- `UNKNOWN: Current extraction latency baseline metrics`
+- `UNKNOWN: Tooling adoption owner mapping`
+- `UNKNOWN: Future risk triggers for deep UI integrations`
 
 ## Validation Checklist
 
