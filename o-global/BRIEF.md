@@ -4,18 +4,26 @@
 
 - project_id: `aicube`
 - repository: `cfinefield/aicube`
-- repo_role: `platform/tool`
-- primary_consumers: `general generative UI workflows, AI Rail agents`
-- generated_at: `2026-02-24T22:23:14Z`
-- generated_by: `Antigravity`
+- repo_role: `platform-tool`
+- generated_at: `2026-02-25T18:30:00Z`
+- generated_by: `codex`
 - ownership: `o-global`
+
+## Consumers
+
+- primary_consumers:
+  - `cfinefield/ai-rail-saas-1`
+  - `cfinefield/visibility`
+  - `cfinefield/ion-content`
+- impact_link: `aicube provides extraction and interpretation signals used by downstream visibility ranking and content generation decisions.`
 
 ## Executive Summary
 
-- `aicube serves as the fundamental UI platform bridging 3D interactions with AI Rail data sources.`
-- `As an enabler repo, scaling relies on integration speed, system reliability, and API latency.`
-- `The LensCrafter worker acts as our primary extraction and AI formatting tool for downstream projects.`
-- `Moving forward, optimizing lead time for Lens component building is absolutely critical for project adoption.`
+- aicube has active frontend + LensCrafter worker foundations.
+- Current runtime docs indicate module contract alignment is partial, not complete.
+- Highest-value near-term work is route contract hardening and auth boundary clarity.
+- Downstream teams need stable extraction reliability and predictable access control.
+- This week should focus on module contract completion and baseline extraction telemetry.
 
 ## Status
 
@@ -23,36 +31,56 @@
 - momentum: `rising`
 - confidence: `medium`
 
+## Routing and Auth Readiness (required for module repos)
+
+| area | current_state | target_state | due_date | owner |
+| --- | --- | --- | --- | --- |
+| `shell_mount` | Path mount support is partially implemented and not fully validated. | `/modules/aicube` works consistently in direct and proxied contexts. | `2026-03-05` | `platform-engineering` |
+| `embed_route` | Embed behavior exists but needs full shell-route smoke coverage. | `/modules/aicube/embed` passes module preview checks in staging. | `2026-03-05` | `platform-engineering` |
+| `auth_contract` | Mixed auth behavior exists; route-level policy is not finalized. | JWT/API key boundary documented and enforced for every protected route. | `2026-03-01` | `operator` |
+
 ## Top Priorities (max 3)
 
-| priority | why_now | measurable_outcome | target_value | due_date | owner |
-| --- | --- | --- | --- | --- | --- |
-| `Improve Worker Latency` | `Slow responses ruin interactive UX. Downstream Impact: better perceived real-time responsiveness.` | `Extraction P95 Latency (ms)` | `2000` | `2026-05-01` | `UNKNOWN` |
-| `Increase Lens Reliability` | `Failures block business features. Downstream Impact: drop in data hallucination issues.` | `Success rate` | `99.9%` | `2026-03-15` | `Antigravity` |
-| `Accelerate Lens Onboarding` | `Devs are blocked by complex setup. Downstream Impact: Faster business time-to-market.` | `Lead time to Lens production` | `<24h` | `2026-04-15` | `UNKNOWN` |
+| priority | why_now | measurable_outcome | metric_class | target_value | due_date | owner |
+| --- | --- | --- | --- | --- | --- | --- |
+| Complete required module route contract | Needed for stable shell composition and operator trust | `module_contract_route_coverage` | `enabler` | `100%` | `2026-03-05` | `platform-engineering` |
+| Finalize and enforce auth boundary | Mixed auth without clear policy increases security and integration risk | `auth_boundary_doc_complete` | `enabler` | `true` | `2026-03-01` | `operator` |
+| Establish extraction reliability baseline | Downstream modules require consistent signal quality | `lenscrafter_extraction_success_rate` | `enabler` | `>=95% over 50 requests` | `2026-03-10` | `aicube-module-owner` |
 
 ## Blockers
 
 | blocker | owner | impact | unblock_plan | eta |
 | --- | --- | --- | --- | --- |
-| `Missing Baseline Stats` | `Antigravity` | `Cannot measure latency/success rate accurately.` | `Implement active logging to trace worker executions` | `2026-03-03` |
+| Canonical auth claim contract not finalized | operator | Blocks consistent route auth enforcement | Publish route-level auth matrix with required claims | 2026-03-01 |
+| Staging env and secret readiness incomplete | operator | Delays full smoke validation | Configure wrangler envs and run route/auth checks | 2026-03-04 |
 
 ## Decisions Needed
 
 | decision | options | recommendation | by_when | owner |
 | --- | --- | --- | --- | --- |
-| `Lens Onboarding Path` | `Publish standard NPM templates vs Centralized Repo SDK` | `UNKNOWN` | `2026-03-10` | `UNKNOWN` |
+| Auth model for shell-facing protected routes | `api key only` vs `jwt for shell + api key for internal` | `jwt for shell + api key for internal` | `2026-03-01` | `operator` |
+| Extraction SLO baseline target | `ad hoc` vs `defined p95 + success baseline` | `defined p95 + success baseline` | `2026-03-05` | `aicube-module-owner` |
 
 ## This Week Plan
 
 | date | action | expected_outcome | verification |
 | --- | --- | --- | --- |
-| `2026-02-24` | `Re-align to Platform APIs` | `Completed o-global docs mapping to Enabler KPIs` | `Automated Gate Check` |
+| `2026-02-27` | Validate route behavior for direct and shell-mounted paths | Module open/embed paths behave consistently | Route smoke checks in shell and direct origin |
+| `2026-03-01` | Publish and apply auth boundary matrix | Protected routes use deterministic auth policy | `401/403/200` auth test suite |
+| `2026-03-05` | Run baseline extraction reliability sample | Reliability baseline recorded for planning | 50-request staged run report |
+
+## Downstream Impact Commitments (required for tool/infra repos)
+
+| consumer | expected_change | measurement | target_value | due_date |
+| --- | --- | --- | --- | --- |
+| `cfinefield/ai-rail-saas-1` | More reliable module operation in dashboard | `module_contract_route_coverage` | `100%` | `2026-03-05` |
+| `cfinefield/visibility` | Better extraction inputs for ranking opportunities | `valid_extraction_payload_count` | `>=40 weekly` | `2026-03-10` |
+| `cfinefield/ion-content` | Fewer handoff failures from extraction outputs | `downstream_handoff_success_rate` | `>=95%` | `2026-03-10` |
 
 ## Unknowns
 
-- `UNKNOWN: What is the current actual latency and success rate of LensCrafter extractions in the wild?`
-- `UNKNOWN: Who holds organizational authority to steer Lens onboarding strategy?`
+- `UNKNOWN: Final issuer/audience configuration and key rotation policy for JWT validation.`
+- `UNKNOWN: Production p95 latency target for extraction-heavy routes.`
 
 ## Validation Checklist
 
@@ -60,3 +88,6 @@
 - [x] All priorities have metric + target + due date.
 - [x] All blockers have owner + ETA.
 - [x] Unknowns explicitly marked as `UNKNOWN`.
+- [x] Priorities are role-appropriate (`business` vs `enabler` metrics).
+- [x] Tool/infra repos include downstream impact commitments.
+- [x] Module repos include route and auth readiness rows with owners and dates.
