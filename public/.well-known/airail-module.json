@@ -1,0 +1,12 @@
+{
+  "id": "aicube",
+  "name": "AI Cube",
+  "description": "Interactive multi-lens site analysis and extraction workspace.",
+  "app_url": "https://lenscrafter.ionia-cf.workers.dev/",
+  "embed_url": "https://lenscrafter.ionia-cf.workers.dev/embed",
+  "health_url": "https://lenscrafter.ionia-cf.workers.dev/health",
+  "api_base_url": "https://lenscrafter.ionia-cf.workers.dev",
+  "version": "0.1.0",
+  "auth_mode": "none",
+  "tags": ["analysis", "crawler", "content", "insights"]
+}

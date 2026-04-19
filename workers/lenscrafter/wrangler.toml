@@ -4,10 +4,9 @@ compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 workers_dev = true
 
-# Routes
-routes = [
-	{ pattern = "airail.io/mcp/*", zone_name = "airail.io" }
-]
+[assets]
+directory = "../../dist"
+binding = "ASSETS"
 
 # Bindings
 [ai]
@@ -18,8 +17,12 @@ binding = "BROWSER"
 
 [[kv_namespaces]]
 binding = "LENS_CACHE"
-id = "128c3635855f4eb69711ef1473643709"
-preview_id = "todo_replace_with_preview_id"
+id = "da843a8df99d48c58de3f65fa0ed6091"
+preview_id = "da843a8df99d48c58de3f65fa0ed6091"
 
 [observability]
 enabled = true
+
+[vars]
+AI_PRIMARY_BASE_URL = "https://ai-primary-worker.ai-rail-account.workers.dev"
+AI_PRIMARY_FALLBACK_TO_LOCAL = "false"
