@@ -50,7 +50,7 @@ class App {
 
 
       // Call Worker
-      const response = await fetch('https://lenscrafter.ai-rail-account.workers.dev/extract', {
+      const response = await fetch('/extract', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         cache: 'no-store', // Force fresh fetch

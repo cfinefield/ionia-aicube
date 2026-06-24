@@ -3,10 +3,10 @@
 I have fully implemented and deployed the **LensCrafter Worker**.
 
 ## Deployment Status
-*   **Worker URL**: `https://lenscrafter.ai-rail-account.workers.dev`
+*   **Worker URL**: `https://lenscrafter.ionia-cf.workers.dev`
 *   **Environment**: `nodejs_compat` enabled.
 *   **Bindings**:
-    *   `LENS_CACHE` (KV): `128c3635855f4eb69711ef1473643709`
+    *   `LENS_CACHE` (KV): `da843a8df99d48c58de3f65fa0ed6091`
     *   `AI` (Workers AI)
     *   `BROWSER` (Puppeteer)
 
@@ -32,7 +32,7 @@ I have fully implemented and deployed the **LensCrafter Worker**.
 To test the endpoint:
 ```bash
 # Full Browser Extraction (Requires WAF Whitelist)
-curl -X POST https://lenscrafter.ai-rail-account.workers.dev/extract \
+curl -X POST https://lenscrafter.ionia-cf.workers.dev/extract \
   -d '{"url": "https://airail.io", "mode": "audit", "options": {"render_js": true}}'
 ```
 
