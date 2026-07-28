@@ -1,5 +1,66 @@
 
-const DEFAULT_REMOTE_TIMEOUT_MS = 60000;
+const DEFAULT_REMOTE_TIMEOUT_MS = 25000;
+const DEFAULT_BOUND_MODEL = '@cf/meta/llama-3.1-8b-instruct-fast';
+
+const ANALYSIS_SCHEMA = {
+    type: 'object',
+    properties: {
+        summary: { type: 'string' },
+        features: {
+            type: 'array',
+            items: { type: 'string' },
+            maxItems: 6
+        },
+        specifications: {
+            type: 'object',
+            additionalProperties: { type: 'string' }
+        },
+        intents: {
+            type: 'array',
+            items: {
+                type: 'object',
+                properties: {
+                    label: { type: 'string' },
+                    score: { type: 'number' }
+                },
+                required: ['label', 'score']
+            },
+            maxItems: 6
+        },
+        personaRelevance: {
+            type: 'object',
+            properties: {
+                features: { type: 'number' },
+                price: { type: 'number' },
+                reason: { type: 'string' }
+            },
+            required: ['reason']
+        },
+        suggestions: {
+            type: 'array',
+            items: {
+                type: 'object',
+                properties: {
+                    text: { type: 'string' },
+                    priority: {
+                        type: 'string',
+                        enum: ['high', 'medium', 'low']
+                    }
+                },
+                required: ['text', 'priority']
+            },
+            maxItems: 6
+        }
+    },
+    required: [
+        'summary',
+        'features',
+        'specifications',
+        'intents',
+        'personaRelevance',
+        'suggestions'
+    ]
+};
 
 const hasNonEmptyArray = (value) =>
     Array.isArray(value) && value.some((item) => {
@@ -19,6 +80,56 @@ const hasSubstantiveAnalysis = (value) => {
     return typeof value.personaRelevance?.reason === 'string' &&
         value.personaRelevance.reason.trim().length > 0;
 };
+
+const readJsonObject = (value) => {
+    if (value && typeof value === 'object') return value;
+    if (typeof value !== 'string') {
+        throw new Error('Workers AI returned an invalid response.');
+    }
+
+    const start = value.indexOf('{');
+    const end = value.lastIndexOf('}');
+    if (start === -1 || end < start) {
+        throw new Error('Workers AI returned no JSON object.');
+    }
+
+    return JSON.parse(value.slice(start, end + 1));
+};
+
+async function runBoundInference(markdownContent, env, persona) {
+    if (!env.AI || typeof env.AI.run !== 'function') {
+        throw new Error('Workers AI binding is unavailable.');
+    }
+
+    const model = String(env.AI_FALLBACK_MODEL || DEFAULT_BOUND_MODEL).trim();
+    const content = String(markdownContent || '').slice(0, 6000);
+    const response = await env.AI.run(model, {
+        messages: [
+            {
+                role: 'system',
+                content: 'You are the Cognitive Lens of the AI Cube. Analyze only the supplied website evidence. Do not invent facts. Return JSON matching the requested schema.'
+            },
+            {
+                role: 'user',
+                content: `Persona: ${persona}\n\nWebsite evidence:\n${content}`
+            }
+        ],
+        response_format: {
+            type: 'json_schema',
+            json_schema: ANALYSIS_SCHEMA
+        },
+        max_tokens: 1200,
+        temperature: 0.2,
+        stream: false
+    });
+
+    const parsed = readJsonObject(response?.response ?? response);
+    if (!hasSubstantiveAnalysis(parsed)) {
+        throw new Error('Workers AI fallback returned no substantive analysis fields.');
+    }
+
+    return { result: parsed, model };
+}
 
 async function runRemoteInference(markdownContent, env, persona) {
     const baseUrl = String(env.AI_PRIMARY_BASE_URL || '').trim().replace(/\/+$/, '');
@@ -75,34 +186,61 @@ async function runRemoteInference(markdownContent, env, persona) {
 
 export const CognitivePipeline = {
     async run(markdownContent, env, persona = 'General User') {
+        let remoteFailure = null;
+
         try {
             const remoteResult = await runRemoteInference(markdownContent, env, persona);
             const substantive = hasSubstantiveAnalysis(remoteResult);
+            if (substantive) {
+                return {
+                    ...remoteResult,
+                    _pipeline: {
+                        stage: 'ai',
+                        status: 'ok',
+                        provider: 'ai_primary_worker',
+                        warnings: []
+                    }
+                };
+            }
+
+            remoteFailure = new Error('AI provider completed but returned no substantive analysis fields.');
+        } catch (e) {
+            remoteFailure = e;
+        }
+
+        try {
+            const fallback = await runBoundInference(markdownContent, env, persona);
             return {
-                ...remoteResult,
+                ...fallback.result,
                 _pipeline: {
                     stage: 'ai',
-                    status: substantive ? 'ok' : 'warning',
-                    provider: 'ai_primary_worker',
-                    warnings: substantive
-                        ? []
-                        : ['AI provider completed but returned no substantive analysis fields.']
+                    status: 'ok',
+                    provider: 'workers_ai_binding_fallback',
+                    model: fallback.model,
+                    warnings: [
+                        `Primary provider unavailable: ${String(remoteFailure?.message || remoteFailure)}`
+                    ]
                 }
             };
-        } catch (e) {
-            console.error("CognitivePipeline Error", e);
+        } catch (fallbackError) {
+            console.error('CognitivePipeline Error', remoteFailure, fallbackError);
 
             return {
-                features: ["AI Analysis Failed"],
+                features: ['AI Analysis Failed'],
                 specifications: {},
-                personaRelevance: { reason: "Error: " + e.message },
+                personaRelevance: {
+                    reason: `Primary: ${String(remoteFailure?.message || remoteFailure)}; fallback: ${String(fallbackError?.message || fallbackError)}`
+                },
                 intents: [],
                 suggestions: [],
                 _pipeline: {
                     stage: 'ai',
                     status: 'error',
-                    provider: 'ai_primary_worker',
-                    warnings: [String(e.message || e)]
+                    provider: 'ai_primary_worker+workers_ai_binding_fallback',
+                    warnings: [
+                        String(remoteFailure?.message || remoteFailure),
+                        String(fallbackError?.message || fallbackError)
+                    ]
                 }
             };
         }

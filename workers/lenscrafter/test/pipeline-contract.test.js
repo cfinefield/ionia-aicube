@@ -128,7 +128,7 @@ test('cognitive pipeline honors an explicit remote timeout override', async () =
     assert.equal(result._pipeline.status, 'ok');
 });
 
-test('cognitive pipeline downgrades an empty provider envelope', async () => {
+test('cognitive pipeline reports both failures when provider is empty and binding is unavailable', async () => {
     const result = await withMockFetch(
         async () => Response.json({
             output: {
@@ -148,8 +148,64 @@ test('cognitive pipeline downgrades an empty provider envelope', async () => {
         )
     );
 
-    assert.equal(result._pipeline.status, 'warning');
+    assert.equal(result._pipeline.status, 'error');
     assert.match(result._pipeline.warnings[0], /no substantive analysis/i);
+    assert.match(result._pipeline.warnings[1], /binding is unavailable/i);
+});
+
+test('cognitive pipeline uses the bound Workers AI fallback after an empty provider envelope', async () => {
+    let observedModel = null;
+    let observedInput = null;
+    const result = await withMockFetch(
+        async () => Response.json({
+            output: {
+                features: [],
+                suggestions: [],
+                intents: {},
+                specifications: {},
+                personaRelevance: { reason: '', features: 0, price: 0 }
+            }
+        }),
+        () => CognitivePipeline.run(
+            '<p>Neighborhood catering and online ordering</p>',
+            {
+                AI_PRIMARY_BASE_URL: 'https://ai.example.test',
+                AI_PRIMARY_SERVICE_TOKEN: 'test-token',
+                AI: {
+                    async run(model, input) {
+                        observedModel = model;
+                        observedInput = input;
+                        return {
+                            response: JSON.stringify({
+                                summary: 'Local catering website',
+                                features: ['Online ordering'],
+                                specifications: { market: 'local catering' },
+                                intents: [{ label: 'Order', score: 0.9 }],
+                                personaRelevance: {
+                                    features: 0.8,
+                                    price: 0.2,
+                                    reason: 'Supports local catering discovery'
+                                },
+                                suggestions: [{
+                                    text: 'Clarify delivery coverage',
+                                    priority: 'medium'
+                                }]
+                            })
+                        };
+                    }
+                }
+            },
+            'Local customer'
+        )
+    );
+
+    assert.equal(observedModel, '@cf/meta/llama-3.1-8b-instruct-fast');
+    assert.match(observedInput.messages[1].content, /Neighborhood catering/);
+    assert.equal(observedInput.response_format.type, 'json_schema');
+    assert.equal(result.features[0], 'Online ordering');
+    assert.equal(result._pipeline.status, 'ok');
+    assert.equal(result._pipeline.provider, 'workers_ai_binding_fallback');
+    assert.match(result._pipeline.warnings[0], /Primary provider unavailable/);
 });
 
 test('extractUrl carries page content and stage evidence through the complete contract', async () => {
