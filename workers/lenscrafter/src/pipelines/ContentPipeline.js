@@ -8,6 +8,9 @@ export const ContentPipeline = {
             const response = await fetch(url, {
                 headers: { 'User-Agent': 'LensCrafter/1.0' }
             });
+            if (!response.ok) {
+                throw new Error(`Failed to fetch ${url}: ${response.status}`);
+            }
             const html = await response.text();
             const $ = cheerio.load(html);
 
@@ -25,11 +28,28 @@ export const ContentPipeline = {
 
             // 3. Return Cleaned HTML (Skip Markdown conversion to avoid DOM dependency in Worker)
             // Llama 3 handles HTML well.
-            return cleanedHtml;
+            return {
+                content: cleanedHtml,
+                _pipeline: {
+                    stage: 'content',
+                    status: cleanedHtml.trim() ? 'ok' : 'warning',
+                    warnings: cleanedHtml.trim()
+                        ? []
+                        : ['The page returned no usable main-content HTML.']
+                }
+            };
 
         } catch (e) {
             console.error("ContentPipeline Error", e);
-            return "Error extracting content: " + e.message;
+            const message = e instanceof Error ? e.message : String(e);
+            return {
+                content: '',
+                _pipeline: {
+                    stage: 'content',
+                    status: 'error',
+                    warnings: [message]
+                }
+            };
         }
     }
 };

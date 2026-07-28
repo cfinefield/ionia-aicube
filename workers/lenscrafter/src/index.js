@@ -107,7 +107,7 @@ const serveApp = async (request, env, pathname) => {
 };
 
 // Shared Logic
-async function extractUrl(targetUrl, mode, options, env, ctx) {
+export async function extractUrl(targetUrl, mode, options, env, ctx) {
     // 1. Check Cache (if Managed Mode)
     if (mode === 'managed' && env.LENS_CACHE) {
         const cached = await env.LENS_CACHE.get(targetUrl);

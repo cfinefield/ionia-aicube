@@ -62,15 +62,26 @@ export const DataPipeline = {
             return {
                 entity,
                 commerce,
-                intents: [] // To be populated by cognitive/structure pipelines
+                intents: [], // To be populated by cognitive/structure pipelines
+                _pipeline: {
+                    stage: 'fetch',
+                    status: 'ok',
+                    httpStatus: response.status
+                }
             };
 
         } catch (e) {
             console.error('DataPipeline Error', e);
+            const message = e instanceof Error ? e.message : String(e);
             return {
-                entity: { name: 'Error fetching content', error: e.message },
+                entity: { name: 'Error fetching content', error: message },
                 commerce: {},
-                intents: []
+                intents: [],
+                _pipeline: {
+                    stage: 'fetch',
+                    status: 'error',
+                    warnings: [message]
+                }
             };
         }
     }
