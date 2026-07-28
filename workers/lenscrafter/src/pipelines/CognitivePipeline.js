@@ -1,6 +1,25 @@
 
 const DEFAULT_REMOTE_TIMEOUT_MS = 60000;
 
+const hasNonEmptyArray = (value) =>
+    Array.isArray(value) && value.some((item) => {
+        if (typeof item === 'string') return item.trim().length > 0;
+        return item && typeof item === 'object' && Object.keys(item).length > 0;
+    });
+
+const hasNonEmptyObject = (value) =>
+    value && typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length > 0;
+
+const hasSubstantiveAnalysis = (value) => {
+    if (!value || typeof value !== 'object') return false;
+    if (typeof value.summary === 'string' && value.summary.trim()) return true;
+    if (hasNonEmptyArray(value.features) || hasNonEmptyArray(value.suggestions)) return true;
+    if (hasNonEmptyArray(value.intents) || hasNonEmptyObject(value.intents)) return true;
+    if (hasNonEmptyObject(value.specifications)) return true;
+    return typeof value.personaRelevance?.reason === 'string' &&
+        value.personaRelevance.reason.trim().length > 0;
+};
+
 async function runRemoteInference(markdownContent, env, persona) {
     const baseUrl = String(env.AI_PRIMARY_BASE_URL || '').trim().replace(/\/+$/, '');
     if (!baseUrl) {
@@ -58,12 +77,16 @@ export const CognitivePipeline = {
     async run(markdownContent, env, persona = 'General User') {
         try {
             const remoteResult = await runRemoteInference(markdownContent, env, persona);
+            const substantive = hasSubstantiveAnalysis(remoteResult);
             return {
                 ...remoteResult,
                 _pipeline: {
                     stage: 'ai',
-                    status: 'ok',
-                    provider: 'ai_primary_worker'
+                    status: substantive ? 'ok' : 'warning',
+                    provider: 'ai_primary_worker',
+                    warnings: substantive
+                        ? []
+                        : ['AI provider completed but returned no substantive analysis fields.']
                 }
             };
         } catch (e) {

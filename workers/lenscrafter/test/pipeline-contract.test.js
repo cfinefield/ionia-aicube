@@ -106,7 +106,12 @@ test('cognitive pipeline honors an explicit remote timeout override', async () =
     const result = await withMockFetch(
         async (_url, init) => {
             observedSignal = init.signal;
-            return Response.json({ output: { features: [], suggestions: [] } });
+            return Response.json({
+                output: {
+                    features: ['Observed capability'],
+                    suggestions: []
+                }
+            });
         },
         () => CognitivePipeline.run(
             '<p>Content</p>',
@@ -121,6 +126,30 @@ test('cognitive pipeline honors an explicit remote timeout override', async () =
     assert.ok(observedSignal instanceof AbortSignal);
     assert.equal(observedSignal.aborted, false);
     assert.equal(result._pipeline.status, 'ok');
+});
+
+test('cognitive pipeline downgrades an empty provider envelope', async () => {
+    const result = await withMockFetch(
+        async () => Response.json({
+            output: {
+                features: [],
+                suggestions: [],
+                intents: {},
+                specifications: {},
+                personaRelevance: { reason: '', features: 0, price: 0 }
+            }
+        }),
+        () => CognitivePipeline.run(
+            '<p>Content</p>',
+            {
+                AI_PRIMARY_BASE_URL: 'https://ai.example.test',
+                AI_PRIMARY_SERVICE_TOKEN: 'test-token'
+            }
+        )
+    );
+
+    assert.equal(result._pipeline.status, 'warning');
+    assert.match(result._pipeline.warnings[0], /no substantive analysis/i);
 });
 
 test('extractUrl carries page content and stage evidence through the complete contract', async () => {
