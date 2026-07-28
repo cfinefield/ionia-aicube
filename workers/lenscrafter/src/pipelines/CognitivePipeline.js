@@ -1,5 +1,5 @@
 
-const DEFAULT_REMOTE_TIMEOUT_MS = 20000;
+const DEFAULT_REMOTE_TIMEOUT_MS = 60000;
 
 async function runRemoteInference(markdownContent, env, persona) {
     const baseUrl = String(env.AI_PRIMARY_BASE_URL || '').trim().replace(/\/+$/, '');

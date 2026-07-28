@@ -101,6 +101,28 @@ test('cognitive pipeline sends extracted HTML to lens_analysis', async () => {
     assert.equal(result._pipeline.status, 'ok');
 });
 
+test('cognitive pipeline honors an explicit remote timeout override', async () => {
+    let observedSignal = null;
+    const result = await withMockFetch(
+        async (_url, init) => {
+            observedSignal = init.signal;
+            return Response.json({ output: { features: [], suggestions: [] } });
+        },
+        () => CognitivePipeline.run(
+            '<p>Content</p>',
+            {
+                AI_PRIMARY_BASE_URL: 'https://ai.example.test',
+                AI_PRIMARY_SERVICE_TOKEN: 'test-token',
+                AI_PRIMARY_TIMEOUT_MS: '45000'
+            }
+        )
+    );
+
+    assert.ok(observedSignal instanceof AbortSignal);
+    assert.equal(observedSignal.aborted, false);
+    assert.equal(result._pipeline.status, 'ok');
+});
+
 test('extractUrl carries page content and stage evidence through the complete contract', async () => {
     let inferenceBody = null;
     const siteHtml = [
