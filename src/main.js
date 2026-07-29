@@ -50,7 +50,10 @@ class App {
 
 
       // Call Worker
-      const response = await fetch('/extract', {
+      // Resolve through the document base so the app works both at the Worker
+      // root and when mounted below the Ionia module proxy.
+      const extractUrl = new URL('extract', document.baseURI);
+      const response = await fetch(extractUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         cache: 'no-store', // Force fresh fetch

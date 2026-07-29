@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "test": "node --test test/*.test.js",
     "preview": "vite preview",
     "deploy:worker": "find public dist -name '.DS_Store' -delete 2>/dev/null; npm run build && find dist -name '.DS_Store' -delete 2>/dev/null && cd workers/lenscrafter && npm install && npm run deploy"
   },

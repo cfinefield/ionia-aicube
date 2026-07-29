@@ -14,6 +14,8 @@
   --bg-dark: #0a0a1a;
   --bg-gradient-1: #1E10C5;
   --bg-gradient-2: #0c0c2d;
+  --cube-size: min(640px, 52vw, 58vh);
+  --cube-depth: calc(var(--cube-size) / 2);
 }
 
 body {
@@ -25,11 +27,14 @@ body {
 }
 
 #app {
-  width: 100vw;
+  width: min(100%, 1600px);
   height: 100vh;
-  display: flex;
+  margin: 0 auto;
+  padding: 20px 20px 96px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 24px;
   align-items: center;
-  justify-content: center;
   position: relative;
 }
 
@@ -38,13 +43,15 @@ body {
    =================================== */
 
 .cube-scene {
-  width: 640px;
-  height: 640px;
+  grid-column: 1;
+  grid-row: 1;
+  width: var(--cube-size);
+  height: var(--cube-size);
+  justify-self: center;
   perspective: 1400px;
   perspective-origin: center center;
   cursor: grab;
-  /* Push cube up to avoid overlap with bottom UI */
-  margin-bottom: 60px;
+  margin-bottom: 20px;
 }
 
 .cube {
@@ -57,8 +64,8 @@ body {
 
 .cube__face {
   position: absolute;
-  width: 640px;
-  height: 640px;
+  width: var(--cube-size);
+  height: var(--cube-size);
   border: 1px solid rgba(71, 67, 239, 0.3);
   border-radius: 20px;
   overflow: hidden;
@@ -70,27 +77,27 @@ body {
 }
 
 .cube__face--front {
-  transform: rotateY(0deg) translateZ(320px);
+  transform: rotateY(0deg) translateZ(var(--cube-depth));
 }
 
 .cube__face--right {
-  transform: rotateY(90deg) translateZ(320px);
+  transform: rotateY(90deg) translateZ(var(--cube-depth));
 }
 
 .cube__face--back {
-  transform: rotateY(180deg) translateZ(320px);
+  transform: rotateY(180deg) translateZ(var(--cube-depth));
 }
 
 .cube__face--left {
-  transform: rotateY(-90deg) translateZ(320px);
+  transform: rotateY(-90deg) translateZ(var(--cube-depth));
 }
 
 .cube__face--top {
-  transform: rotateX(90deg) translateZ(320px);
+  transform: rotateX(90deg) translateZ(var(--cube-depth));
 }
 
 .cube__face--bottom {
-  transform: rotateX(-90deg) translateZ(320px);
+  transform: rotateX(-90deg) translateZ(var(--cube-depth));
 }
 
 .lens-content {
@@ -1382,10 +1389,12 @@ body {
    =================================== */
 
 .lens-panel {
-  position: fixed;
-  top: 20px;
-  right: 20px;
+  position: static;
+  grid-column: 2;
+  grid-row: 1;
   width: 280px;
+  max-height: calc(100vh - 136px);
+  overflow-y: auto;
   background: rgba(15, 23, 42, 0.85);
   backdrop-filter: blur(20px);
   border-radius: 16px;
@@ -1768,88 +1777,60 @@ body.zoomed-in #ui-overlay {
    Responsive
    =================================== */
 
-@media (max-width: 1200px) {
+@media (max-width: 900px) {
+  :root {
+    --cube-size: min(480px, 72vw, 54vh);
+  }
+
+  body {
+    overflow: auto;
+  }
+
+  #app {
+    width: 100%;
+    min-height: 100svh;
+    height: auto;
+    padding: 24px 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 20px;
+  }
+
   .cube-scene {
-    width: 480px;
-    height: 480px;
-  }
-
-  .cube__face {
-    width: 480px;
-    height: 480px;
-  }
-
-  .cube__face--front {
-    transform: rotateY(0deg) translateZ(240px);
-  }
-
-  .cube__face--right {
-    transform: rotateY(90deg) translateZ(240px);
-  }
-
-  .cube__face--back {
-    transform: rotateY(180deg) translateZ(240px);
-  }
-
-  .cube__face--left {
-    transform: rotateY(-90deg) translateZ(240px);
-  }
-
-  .cube__face--top {
-    transform: rotateX(90deg) translateZ(240px);
-  }
-
-  .cube__face--bottom {
-    transform: rotateX(-90deg) translateZ(240px);
-  }
-}
-
-@media (max-width: 768px) {
-  .cube-scene {
-    width: 320px;
-    height: 320px;
-  }
-
-  .cube__face {
-    width: 320px;
-    height: 320px;
-  }
-
-  .cube__face--front {
-    transform: rotateY(0deg) translateZ(160px);
-  }
-
-  .cube__face--right {
-    transform: rotateY(90deg) translateZ(160px);
-  }
-
-  .cube__face--back {
-    transform: rotateY(180deg) translateZ(160px);
-  }
-
-  .cube__face--left {
-    transform: rotateY(-90deg) translateZ(160px);
-  }
-
-  .cube__face--top {
-    transform: rotateX(90deg) translateZ(160px);
-  }
-
-  .cube__face--bottom {
-    transform: rotateX(-90deg) translateZ(160px);
+    order: 1;
+    flex: 0 0 auto;
+    margin: 0;
   }
 
   .lens-panel {
-    top: auto;
-    bottom: 100px;
-    right: 10px;
-    left: 10px;
-    width: auto;
+    order: 2;
+    width: min(100%, 560px);
+    max-height: none;
+  }
+
+  #ui-overlay {
+    order: 3;
+    position: static;
+    transform: none;
+    flex: 0 0 auto;
   }
 
   .expanded-container {
     width: 95vw;
     height: 90vh;
     border-radius: 16px;
+  }
+
+  .expanded-overlay {
+    padding: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .instructions {
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 320px;
   }
 }

@@ -61,25 +61,25 @@ export class TransactionLens {
                 <div class="connectivity-status-bar">
                     <div class="status-item status-inactive" data-tooltip="Inactive (Missing Manifest)">
                         <div class="status-icon-img">
-                            <img src="/logos/ucp.png" alt="UCP">
+                            <img src="logos/ucp.png" alt="UCP">
                         </div>
                         <span class="status-dot"></span>
                     </div>
                     <div class="status-item status-inactive" data-tooltip="Inactive (No Agent Tags)">
                         <div class="status-icon-img">
-                            <img src="/logos/acp.png" alt="ACP">
+                            <img src="logos/acp.png" alt="ACP">
                         </div>
                         <span class="status-dot"></span>
                     </div>
                     <div class="status-item status-inactive" data-tooltip="Inactive (No Context Files)">
                         <div class="status-icon-img">
-                            <img src="/logos/mcp.png" alt="MCP">
+                            <img src="logos/mcp.png" alt="MCP">
                         </div>
                         <span class="status-dot"></span>
                     </div>
                     <div class="status-item status-inactive" data-tooltip="Inactive (No Widget)">
                         <div class="status-icon-img">
-                            <img src="/logos/prime.png" alt="Prime">
+                            <img src="logos/prime.png" alt="Prime">
                         </div>
                         <span class="status-dot"></span>
                     </div>
