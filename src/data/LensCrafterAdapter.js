@@ -42,8 +42,14 @@ export const LensCrafterAdapter = {
             // Pass through meta + Schema Audit for thoughts
             agentThoughts: this.generateThoughts(rawJson),
 
-            // Content for Crawler Lens
-            markdown: this.convertHtmlToMarkdown(rawJson.rawContent || '')
+            // Diagnostic extraction for Crawler Lens. This is not evidence that
+            // the audited site publishes a native Markdown representation.
+            markdown: rawJson.aiReadability?.hasNativeMarkdown === true
+                ? rawJson.nativeMarkdownContent || ''
+                : this.convertHtmlToMarkdown(rawJson.rawContent || ''),
+            markdownSource: rawJson.aiReadability?.markdownSource || 'none',
+            hasNativeMarkdown: rawJson.aiReadability?.hasNativeMarkdown === true,
+            hasLlmsTxt: rawJson.aiReadability?.hasLlmsTxt === true
         };
     },
 

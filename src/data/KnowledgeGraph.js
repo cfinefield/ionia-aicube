@@ -305,7 +305,7 @@ export const lensMetadata = {
         name: 'Crawler / LLM',
         icon: '📚',
         tier: 3,
-        format: 'Markdown (.md)',
+        format: 'Native Markdown / extracted text',
         purpose: 'Efficient indexing and high-context training',
         description: 'Markdown representation optimized for LLM crawlers and search indexing.',
         agentThoughts: [

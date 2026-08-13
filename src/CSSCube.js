@@ -39,7 +39,7 @@ export class CSSCube {
         this.contentTiers = [
             { id: 'human', name: 'Human Visitor', format: 'Full HTML/CSS/JS', icon: '👤' },
             { id: 'browser-agent', name: 'Browser Agent', format: 'Semantic HTML', icon: '🤖' },
-            { id: 'crawler', name: 'Crawler / Learner', format: 'Markdown (.md)', icon: '📚' },
+            { id: 'crawler', name: 'Crawler Extraction', format: 'Native Markdown / extracted text', icon: '📚' },
             { id: 'transaction', name: 'Transactional Agent', format: 'JSON API', icon: '💳' },
         ];
 

@@ -24,6 +24,7 @@ export class BrowserAgentLens {
             { level: 4, tag: 'section', type: 'content', label: 'Specs' },
             { level: 5, tag: 'dl', type: 'data', label: '14 entries' },
         ];
+        const semanticReady = nodes.length > 1;
 
         const nodesHTML = nodes.map(node => {
             let content = `<span class="tag tag--${node.type}" style="margin-left: ${node.level * 16}px">&lt;${node.tag}&gt;</span>`;
@@ -57,8 +58,9 @@ export class BrowserAgentLens {
                 </div>
                 
                 <div class="agent-status">
-                    <div class="status-line">🤖 Agent Status: READY</div>
+                    <div class="status-line">🤖 Extraction status: ${semanticReady ? 'READY' : 'DEGRADED'}</div>
                     ${nodes.length > 0 ? `<div class="status-result">Nodes: ${nodes.length}</div>` : ''}
+                    ${semanticReady ? '' : '<div class="status-result">Only a wrapper node was extracted; inspect the source/render pipeline.</div>'}
                 </div>
                 
                 <div class="lens-label lens-label--cyan">🤖 BROWSER AGENT</div>

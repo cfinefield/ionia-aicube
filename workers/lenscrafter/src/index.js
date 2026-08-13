@@ -45,6 +45,85 @@ const jsonResponse = (payload, status = 200, extraHeaders = {}) =>
         },
     });
 
+const looksLikeHtml = (value) => {
+    const sample = value.slice(0, 1024).trim().toLowerCase();
+    return sample.startsWith('<!doctype') ||
+        sample.startsWith('<html') ||
+        sample.includes('<head') ||
+        sample.includes('<body') ||
+        /<\/?[a-z][^>]*>/i.test(sample);
+};
+
+const readMeaningfulMarkdownResponse = async (response, expectedUrl) => {
+    if (!response?.ok || response.url !== expectedUrl) return null;
+    const mediaType = (response.headers.get('content-type') || '')
+        .split(';', 1)[0]
+        .trim()
+        .toLowerCase();
+    if (!['text/markdown', 'text/x-markdown', 'application/markdown', 'text/plain'].includes(mediaType)) {
+        return null;
+    }
+    const text = (await response.text()).trim();
+    if (text.length < 80 || text.length > 256_000 || looksLikeHtml(text)) return null;
+    const words = text.match(/[\p{L}\p{N}][\p{L}\p{N}'’_-]*/gu) || [];
+    return words.length >= 8 && new Set(words.map((word) => word.toLowerCase())).size >= 6
+        ? text
+        : null;
+};
+
+export const probeNativeAiReadability = async (targetUrl, fetchImpl = fetch) => {
+    const requestedPageUrl = new URL(targetUrl).toString();
+    const canonicalResponse = await fetchImpl(requestedPageUrl, {
+        redirect: 'follow',
+        headers: {
+            'User-Agent': 'Mozilla/5.0 (compatible; LensCrafter/1.0; +https://app.ionia.sh)',
+            'Accept': 'text/html,application/xhtml+xml;q=0.9,*/*;q=0.1'
+        }
+    });
+    if (!canonicalResponse?.ok || !canonicalResponse.url) {
+        return {
+            hasMarkdown: false,
+            hasNativeMarkdown: false,
+            hasGeneratedCrawlerProjection: false,
+            markdownSource: 'none',
+            nativeMarkdownContent: '',
+            hasLlmsTxt: false
+        };
+    }
+    await canonicalResponse.body?.cancel();
+    const pageUrl = canonicalResponse.url;
+    const llmsUrl = new URL('/llms.txt', new URL(pageUrl).origin).toString();
+    const [markdownResponse, llmsResponse] = await Promise.all([
+        fetchImpl(pageUrl, {
+            redirect: 'follow',
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (compatible; LensCrafter/1.0; +https://app.ionia.sh)',
+                'Accept': 'text/markdown,text/x-markdown,text/plain;q=0.9,text/html;q=0.4,*/*;q=0.1'
+            }
+        }),
+        fetchImpl(llmsUrl, {
+            redirect: 'follow',
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (compatible; LensCrafter/1.0; +https://app.ionia.sh)',
+                'Accept': 'text/plain,text/markdown;q=0.9,*/*;q=0.1'
+            }
+        })
+    ]);
+    const [nativeMarkdownContent, llmsContent] = await Promise.all([
+        readMeaningfulMarkdownResponse(markdownResponse, pageUrl),
+        readMeaningfulMarkdownResponse(llmsResponse, llmsUrl)
+    ]);
+    const hasNativeMarkdown = nativeMarkdownContent !== null;
+    return {
+        hasMarkdown: hasNativeMarkdown,
+        hasNativeMarkdown,
+        hasGeneratedCrawlerProjection: false,
+        markdownSource: hasNativeMarkdown ? 'native' : 'none',
+        nativeMarkdownContent: nativeMarkdownContent || '',
+        hasLlmsTxt: llmsContent !== null
+    };
+};
+
 const buildModuleManifest = (origin) => ({
     id: MODULE_META.id,
     name: MODULE_META.name,
@@ -137,27 +216,37 @@ export async function extractUrl(targetUrl, mode, options, env, ctx) {
         .flatMap((stage) => stage.warnings || [])
         .filter(Boolean);
 
+    let nativeReadability = {
+        hasMarkdown: false,
+        hasNativeMarkdown: false,
+        hasGeneratedCrawlerProjection: false,
+        markdownSource: 'none',
+        nativeMarkdownContent: '',
+        hasLlmsTxt: false
+    };
+    try {
+        nativeReadability = await probeNativeAiReadability(targetUrl);
+    } catch (error) {
+        console.warn('native AI readability probe failed', error);
+    }
+    const hasGeneratedCrawlerProjection = Boolean(content.content && content.content.trim());
     const aiReadability = {
-        hasMarkdown: Boolean(content.content && content.content.trim().length > 0),
-        hasLlmsTxt: false,
+        ...nativeReadability,
+        hasGeneratedCrawlerProjection,
+        markdownSource: nativeReadability.hasNativeMarkdown
+            ? 'native'
+            : hasGeneratedCrawlerProjection
+                ? 'generated'
+                : 'none',
         crawlerAccessOk: ['ok', 'warning'].includes(pipelineStatus.fetch.status)
     };
-
-    try {
-        const llmsUrl = new URL('/llms.txt', targetUrl).toString();
-        const llmsResponse = await fetch(llmsUrl, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (compatible; LensCrafter/1.0; +https://app.ionia.sh)',
-                'Accept': 'text/plain,text/markdown;q=0.9,*/*;q=0.8'
-            }
-        });
-        if (llmsResponse.ok) {
-            const llmsText = await llmsResponse.text();
-            aiReadability.hasLlmsTxt = Boolean(llmsText.trim());
+    const contentProjection = hasGeneratedCrawlerProjection
+        ? {
+            type: 'generated_html_text',
+            source: 'fetched_html',
+            native: false
         }
-    } catch (error) {
-        console.warn('llms.txt probe failed', error);
-    }
+        : null;
 
     const overallStatus = pipelineStatus.fetch.status === 'error'
         ? 'error'
@@ -184,6 +273,8 @@ export async function extractUrl(targetUrl, mode, options, env, ctx) {
         personaRelevance: cognitive.personaRelevance,
         suggestions: cognitive.suggestions || [],
         rawContent: content.content,
+        contentProjection,
+        nativeMarkdownContent: nativeReadability.nativeMarkdownContent,
         pipelineStatus,
         warnings,
         meta: {

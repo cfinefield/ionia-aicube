@@ -1,11 +1,13 @@
 /**
  * CrawlerLens.js
- * Renders Markdown representation for LLM crawlers
- * Tier 3: Markdown (.md) format
+ * Renders the observed native Markdown response or a diagnostic text
+ * extraction. Generated extraction must never be presented as site-owned
+ * Markdown.
  */
 
 export class CrawlerLens {
     renderHTML(data, personaMode = 'generic') {
+        const nativeMarkdown = data.hasNativeMarkdown === true;
         const specs = data.specifications ? Object.entries(data.specifications).slice(0, 5) : [];
         const specsHTML = specs.length > 0 ? specs.map(([key, value]) =>
             `<div class="spec-row" data-highlight-intent data-lens-label="Spec: ${key}">| ${key} | ${value} |</div>`
@@ -26,7 +28,9 @@ export class CrawlerLens {
         return `
             <div class="lens lens--crawler">
                 <div class="md-content">
-                    <h1 class="md-h1" ${getPersonaAttr('Title H1')}># ${data.entity.name}</h1>
+                    <h1 class="md-h1" ${getPersonaAttr('Title H1')}>${nativeMarkdown ? '# Native Markdown' : 'Extracted page text'}</h1>
+                    <p class="md-italic">${nativeMarkdown ? 'Verified public Markdown response.' : 'Generated from fetched HTML for diagnosis only. The site did not publish native Markdown.'}</p>
+                    <p class="md-italic">/llms.txt: ${data.hasLlmsTxt ? 'verified' : 'not verified'}</p>
                     <p class="md-italic">*${(data.entity.description || '').substring(0, 60)}...*</p>
                     
                     ${(data.commerce.price.formatted || data.commerce.availability || (data.entity.brand && data.entity.brand.name) || (data.entity.id && data.entity.id !== data.entity.name)) ? `
@@ -47,10 +51,10 @@ export class CrawlerLens {
                         ` : '')
             }
                     
-                    <div class="token-count">~450 tokens | 2.1kb</div>
+                    <div class="token-count">${nativeMarkdown ? 'Native Markdown verified' : 'Diagnostic projection · no Markdown credit'}</div>
                 </div>
                 
-                <div class="lens-label lens-label--dark">📚 CRAWLER VIEW</div>
+                <div class="lens-label lens-label--dark">${nativeMarkdown ? '📚 NATIVE MARKDOWN' : '📚 EXTRACTED PAGE TEXT'}</div>
             </div>
         `;
     }
