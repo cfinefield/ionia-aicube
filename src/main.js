@@ -262,8 +262,8 @@ class App {
     if (icon) icon.textContent = tier.icon;
     const currentProduct = products[this.currentProductId];
     const markdownMissing = tier.id === 'crawler' && currentProduct?.hasNativeMarkdown !== true;
-    const tierName = markdownMissing ? 'Crawler Readiness — Failed' : tier.name;
-    const tierFormat = markdownMissing ? 'FAIL · Native Markdown missing' : tier.format;
+    const tierName = markdownMissing ? 'AI Crawler View — Needs improvement' : tier.name;
+    const tierFormat = markdownMissing ? 'Crawler-optimized Markdown not served' : tier.format;
 
     if (title) title.textContent = tierName;
     if (tierEl) tierEl.textContent = tierFormat;
@@ -274,8 +274,8 @@ class App {
       'human': 'Gets the full, rich, visually designed website for persuasion and branding.',
       'browser-agent': 'Gets a simplified but interactive page for reliable navigation and form filling.',
       'crawler': markdownMissing
-        ? 'This site did not serve native Markdown. No generated substitute is shown or credited.'
-        : 'Verified native Markdown served by the audited site.',
+        ? 'AI crawlers can reach this page, but a dedicated Markdown experience was not detected.'
+        : 'This page serves verified crawler-optimized Markdown.',
       'transaction': 'Interacts with a pure data API to perform actions with 100% precision.'
     };
     if (description) description.textContent = descriptions[tier.id] || '';

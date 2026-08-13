@@ -73,14 +73,14 @@ export const LensCrafterAdapter = {
         }
 
         if (rawJson.aiReadability?.hasNativeMarkdown === true) {
-            thoughts.push('✅ Native Markdown: verified');
+            thoughts.push('✅ Crawler-optimized Markdown: available');
         } else {
-            thoughts.push('❌ Native Markdown: missing');
+            thoughts.push('⚠️ Crawler-optimized Markdown: not served');
         }
 
         thoughts.push(rawJson.aiReadability?.hasLlmsTxt === true
-            ? '✅ /llms.txt: verified'
-            : '❌ /llms.txt: missing or invalid');
+            ? '✅ llms.txt guidance: available'
+            : '⚠️ llms.txt guidance: not found');
 
         thoughts.push(`Found ${rawJson.semanticStructure?.children?.length || 0} top-level nodes`);
 

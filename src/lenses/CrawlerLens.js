@@ -18,9 +18,9 @@ export class CrawlerLens {
         return `
             <div class="lens lens--crawler">
                 <div class="md-content">
-                    <h1 class="md-h1" ${getPersonaAttr('Title H1')}>${nativeMarkdown ? '# Native Markdown' : 'Native Markdown missing'}</h1>
-                    <p class="md-italic">${nativeMarkdown ? 'Verified public Markdown response.' : 'FAIL — The audited site did not publish a native Markdown representation.'}</p>
-                    <p class="md-italic">/llms.txt: ${data.hasLlmsTxt ? 'verified' : 'not verified'}</p>
+                    <h1 class="md-h1" ${getPersonaAttr('Title H1')}>${nativeMarkdown ? '# Crawler-optimized content' : 'Crawler optimization incomplete'}</h1>
+                    <p class="md-italic">${nativeMarkdown ? 'This page serves a verified Markdown experience for AI crawlers.' : 'This page is not serving crawler-optimized Markdown content.'}</p>
+                    <p class="md-italic">llms.txt guidance: ${data.hasLlmsTxt ? 'available' : 'not found'}</p>
                     ${nativeMarkdown && (data.commerce.price.formatted || data.commerce.availability || (data.entity.brand && data.entity.brand.name) || (data.entity.id && data.entity.id !== data.entity.name)) ? `
                     <div class="md-frontmatter">
                         <div class="md-line">---</div>
@@ -34,15 +34,14 @@ export class CrawlerLens {
                 ${nativeMarkdown && data.markdown
                     ? `<div class="md-content-raw" style="white-space: pre-wrap; font-family: monospace; color: #a0a0a0;">${data.markdown}</div>`
                     : `<div class="status-result">
-                        No Markdown content is shown because none was served by the site.
-                        Publish a native Markdown representation through content negotiation,
-                        then rerun this audit.
+                        AI crawlers can reach this page, but a dedicated Markdown experience
+                        was not detected.
                     </div>`}
                     
-                    <div class="token-count">${nativeMarkdown ? 'Native Markdown verified' : 'FAILED · native Markdown unavailable'}</div>
+                    <div class="token-count">${nativeMarkdown ? 'Crawler-optimized Markdown available' : 'NEEDS IMPROVEMENT · Markdown unavailable'}</div>
                 </div>
                 
-                <div class="lens-label lens-label--dark">${nativeMarkdown ? '📚 NATIVE MARKDOWN' : '❌ MARKDOWN MISSING'}</div>
+                <div class="lens-label lens-label--dark">${nativeMarkdown ? '📚 CRAWLER OPTIMIZED' : '📚 CRAWLER EXPERIENCE LIMITED'}</div>
             </div>
         `;
     }
