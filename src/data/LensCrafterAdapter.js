@@ -42,11 +42,11 @@ export const LensCrafterAdapter = {
             // Pass through meta + Schema Audit for thoughts
             agentThoughts: this.generateThoughts(rawJson),
 
-            // Diagnostic extraction for Crawler Lens. This is not evidence that
-            // the audited site publishes a native Markdown representation.
+            // The Crawler Lens is an evidence surface. Never manufacture a
+            // Markdown substitute when the audited site did not publish one.
             markdown: rawJson.aiReadability?.hasNativeMarkdown === true
                 ? rawJson.nativeMarkdownContent || ''
-                : this.convertHtmlToMarkdown(rawJson.rawContent || ''),
+                : '',
             markdownSource: rawJson.aiReadability?.markdownSource || 'none',
             hasNativeMarkdown: rawJson.aiReadability?.hasNativeMarkdown === true,
             hasLlmsTxt: rawJson.aiReadability?.hasLlmsTxt === true
@@ -71,6 +71,16 @@ export const LensCrafterAdapter = {
         } else {
             thoughts.push('✅ Schema Health: Excellent');
         }
+
+        if (rawJson.aiReadability?.hasNativeMarkdown === true) {
+            thoughts.push('✅ Native Markdown: verified');
+        } else {
+            thoughts.push('❌ Native Markdown: missing');
+        }
+
+        thoughts.push(rawJson.aiReadability?.hasLlmsTxt === true
+            ? '✅ /llms.txt: verified'
+            : '❌ /llms.txt: missing or invalid');
 
         thoughts.push(`Found ${rawJson.semanticStructure?.children?.length || 0} top-level nodes`);
 

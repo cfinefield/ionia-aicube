@@ -260,15 +260,22 @@ class App {
     const { icon, title, tier: tierEl, format, description, thoughtsList } = this.panelElements;
 
     if (icon) icon.textContent = tier.icon;
-    if (title) title.textContent = tier.name;
-    if (tierEl) tierEl.textContent = tier.format;
-    if (format) format.textContent = tier.format;
+    const currentProduct = products[this.currentProductId];
+    const markdownMissing = tier.id === 'crawler' && currentProduct?.hasNativeMarkdown !== true;
+    const tierName = markdownMissing ? 'Crawler Readiness — Failed' : tier.name;
+    const tierFormat = markdownMissing ? 'FAIL · Native Markdown missing' : tier.format;
+
+    if (title) title.textContent = tierName;
+    if (tierEl) tierEl.textContent = tierFormat;
+    if (format) format.textContent = tierFormat;
 
     // Description based on tier
     const descriptions = {
       'human': 'Gets the full, rich, visually designed website for persuasion and branding.',
       'browser-agent': 'Gets a simplified but interactive page for reliable navigation and form filling.',
-      'crawler': 'Gets a lightweight, narrative file to efficiently understand and index content.',
+      'crawler': markdownMissing
+        ? 'This site did not serve native Markdown. No generated substitute is shown or credited.'
+        : 'Verified native Markdown served by the audited site.',
       'transaction': 'Interacts with a pure data API to perform actions with 100% precision.'
     };
     if (description) description.textContent = descriptions[tier.id] || '';
@@ -277,7 +284,6 @@ class App {
       let thoughts = [];
 
       // 1. Check for Dynamic Thoughts on the Product itself (High Priority)
-      const currentProduct = products[this.currentProductId];
       if (currentProduct && currentProduct.agentThoughts && Array.isArray(currentProduct.agentThoughts)) {
         thoughts = currentProduct.agentThoughts;
       }
