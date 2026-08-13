@@ -20,28 +20,36 @@ export const StructurePipeline = {
             };
         }
 
+        let browser;
         try {
             // Using standard launch with binding
-            const browser = await puppeteer.launch(env.BROWSER);
+            browser = await puppeteer.launch(env.BROWSER);
             const page = await browser.newPage();
 
             // Set a realistic viewport
             await page.setViewport({ width: 1280, height: 800 });
 
             await page.setUserAgent('LensCrafter/1.0');
-            await page.goto(url, { waitUntil: 'networkidle0' });
+            await page.goto(url, {
+                waitUntil: 'domcontentloaded',
+                timeout: 20_000
+            });
+            await new Promise((resolve) => setTimeout(resolve, 1_500));
 
             // Extract Semantic Tree
-            const snapshot = await page.accessibility.snapshot();
+            const snapshot = await page.accessibility.snapshot({ interestingOnly: false });
+            const nodeCount = countSnapshotNodes(snapshot);
 
-            await browser.close();
             return {
                 snapshot,
                 _pipeline: {
                     stage: 'render',
-                    status: snapshot ? 'ok' : 'warning',
+                    status: nodeCount > 1 ? 'ok' : 'warning',
                     renderer: 'cloudflare_browser',
-                    warnings: snapshot ? [] : ['The browser returned no accessibility snapshot.']
+                    nodeCount,
+                    warnings: nodeCount > 1
+                        ? []
+                        : ['The browser returned only a wrapper accessibility node.']
                 }
             };
         } catch (e) {
@@ -56,6 +64,14 @@ export const StructurePipeline = {
                     warnings: [message]
                 }
             };
+        } finally {
+            await browser?.close().catch(() => {});
         }
     }
+};
+
+const countSnapshotNodes = (node) => {
+    if (!node || typeof node !== 'object') return 0;
+    const children = Array.isArray(node.children) ? node.children : [];
+    return 1 + children.reduce((sum, child) => sum + countSnapshotNodes(child), 0);
 };
