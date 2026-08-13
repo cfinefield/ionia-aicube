@@ -233,11 +233,8 @@ export async function extractUrl(targetUrl, mode, options, env, ctx) {
     const aiReadability = {
         ...nativeReadability,
         hasGeneratedCrawlerProjection,
-        markdownSource: nativeReadability.hasNativeMarkdown
-            ? 'native'
-            : hasGeneratedCrawlerProjection
-                ? 'generated'
-                : 'none',
+        // HTML-derived text is diagnostic evidence, never a Markdown source.
+        markdownSource: nativeReadability.hasNativeMarkdown ? 'native' : 'none',
         crawlerAccessOk: ['ok', 'warning'].includes(pipelineStatus.fetch.status)
     };
     const contentProjection = hasGeneratedCrawlerProjection

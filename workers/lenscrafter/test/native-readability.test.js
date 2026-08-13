@@ -56,6 +56,7 @@ test('redirected or HTML llms responses fail closed', async () => {
         });
     });
     assert.equal(result.hasNativeMarkdown, false);
+    assert.equal(result.markdownSource, 'none');
     assert.equal(result.hasLlmsTxt, false);
 });
 
